@@ -3,8 +3,13 @@
   "version": "3.0.0",
   "description": "Production-ready Multi-Agent Control Plane with Gemini API integration, Flow DAG execution, and comprehensive dashboard.",
   "type": "module",
-  "license": "MIT",
-  "author": "Creativity Liberty",
+  "license": "PRIVATE",
+  "author": {
+    "name": "Numtema Foundry AI",
+    "email": "numtemalionel@gmail.com",
+    "url": "https://numtema.ai"
+  },
+  "private": true,
   "repository": {
     "type": "git",
     "url": "https://github.com/Creativityliberty/num.git"

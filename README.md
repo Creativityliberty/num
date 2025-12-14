@@ -2,6 +2,8 @@
 
 Production-ready Multi-Agent Control Plane with Gemini API integration, Flow DAG execution, and comprehensive dashboard.
 
+**© 2025 Numtema Foundry AI** - All rights reserved. Private and confidential.
+
 ## Features
 
 - **28 Agents** (4 standard + 24 custom modes)
