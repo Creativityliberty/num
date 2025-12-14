@@ -1,13 +1,13 @@
 {
-  "name": "mcp-agents-modes",
-  "version": "0.1.0",
-  "description": "Universal MCP Mode Provider runtime (TypeScript).",
+  "name": "num-agents",
+  "version": "3.0.0",
+  "description": "Production-ready Multi-Agent Control Plane with Gemini API integration, Flow DAG execution, and comprehensive dashboard.",
   "type": "module",
   "license": "MIT",
-  "author": "",
+  "author": "Creativity Liberty",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://github.com/Creativityliberty/num.git"
   },
   "bin": {
     "mcp-agents-modes": "./dist/cli.js"
