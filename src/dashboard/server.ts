@@ -19,10 +19,17 @@ import { calculateLayout, generateFlowGraph, generateSVG } from "./data/flowGrap
 import { installPack, listMarketplacePacks, publishPack } from "./data/marketplace.js";
 import { handleMcpRequest } from "./data/mcpApi.js";
 import { MCP_TOOLS, getAllCategories, getToolsByCategory } from "./data/mcpTools.js";
-import { computeModelHealthFromEvents, loadTelemetryEvents, suggestFallbacks } from "./data/modelHealth.js";
+import {
+  computeModelHealthFromEvents,
+  loadTelemetryEvents,
+  suggestFallbacks,
+} from "./data/modelHealth.js";
 import { applyModelFallbackSuggestion } from "./data/modelHealthApply.js";
 import { runBatchApply } from "./data/modelHealthBatch.js";
-import { listModelHealthBatchReports, loadModelHealthBatchReport } from "./data/modelHealthBatchReports.js";
+import {
+  listModelHealthBatchReports,
+  loadModelHealthBatchReport,
+} from "./data/modelHealthBatchReports.js";
 import { runGitBatchOps } from "./data/modelHealthGit.js";
 import { listModelHealthReports, loadModelHealthReport } from "./data/modelHealthReports.js";
 import { runPackOps } from "./data/packops.js";
@@ -32,7 +39,15 @@ import { RealtimeManager } from "./data/realtimeUpdates.js";
 import { replayDryRun } from "./data/replay.js";
 import { downloadReplayJSON, listReplays, loadReplay } from "./data/replays.js";
 import { listReports, loadReport } from "./data/reports.js";
-import { exportRunJSON, hasBackup, importRunJSON, listRuns, loadBundleForSession, loadRun, saveRun } from "./data/runs.js";
+import {
+  exportRunJSON,
+  hasBackup,
+  importRunJSON,
+  listRuns,
+  loadBundleForSession,
+  loadRun,
+  saveRun,
+} from "./data/runs.js";
 import { computeScoring, suggestAgents } from "./data/scoring.js";
 import { AuditLogger, RBACManager } from "./data/security.js";
 import { runSmoke } from "./data/smoke.js";
@@ -40,6 +55,152 @@ import { computeStats } from "./data/stats.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const realtimeManager = new RealtimeManager();
+
+const executions = new Map<string, any>();
+
+function generateExecutionId(): string {
+  return `exec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
+
+function handleAgentRequest(pathname: string, method: string, req: any, res: any): void {
+  // GET /api/agents
+  if (method === "GET" && pathname === "/api/agents") {
+    const agents = [
+      {
+        id: "analysis-agent",
+        name: "Analysis Agent",
+        description: "Analyzes data and text",
+        tags: ["analysis", "data"],
+      },
+      {
+        id: "planning-agent",
+        name: "Planning Agent",
+        description: "Plans and orchestrates workflows",
+        tags: ["planning", "orchestration"],
+      },
+      {
+        id: "solutioning-agent",
+        name: "Solutioning Agent",
+        description: "Generates solutions and ideas",
+        tags: ["solution", "brainstorm"],
+      },
+      {
+        id: "implementation-agent",
+        name: "Implementation Agent",
+        description: "Executes and implements solutions",
+        tags: ["implementation", "execution"],
+      },
+    ];
+    res.status(200).json({ total: agents.length, agents });
+    return;
+  }
+
+  // GET /api/agents/:agentId
+  const agentMatch = pathname.match(/^\/api\/agents\/([^\/]+)$/);
+  if (
+    method === "GET" &&
+    agentMatch &&
+    !agentMatch[1].includes("execute") &&
+    !agentMatch[1].includes("executions")
+  ) {
+    const agentId = agentMatch[1];
+    const agentDetails: Record<string, any> = {
+      "analysis-agent": {
+        id: "analysis-agent",
+        name: "Analysis Agent",
+        description: "Analyzes data and text",
+        tags: ["analysis", "data"],
+        capabilities: ["text-analysis", "data-processing", "summarization"],
+        handlers: ["LLMHandler", "EmbeddingsRAGHandler"],
+      },
+      "planning-agent": {
+        id: "planning-agent",
+        name: "Planning Agent",
+        description: "Plans and orchestrates workflows",
+        tags: ["planning", "orchestration"],
+        capabilities: ["workflow-planning", "task-decomposition", "scheduling"],
+        handlers: ["LLMHandler", "FunctionCallingHandler"],
+      },
+      "solutioning-agent": {
+        id: "solutioning-agent",
+        name: "Solutioning Agent",
+        description: "Generates solutions and ideas",
+        tags: ["solution", "brainstorm"],
+        capabilities: ["ideation", "solution-design", "problem-solving"],
+        handlers: ["LLMHandler", "DeepResearchAgentHandler"],
+      },
+      "implementation-agent": {
+        id: "implementation-agent",
+        name: "Implementation Agent",
+        description: "Executes and implements solutions",
+        tags: ["implementation", "execution"],
+        capabilities: ["code-execution", "deployment", "automation"],
+        handlers: ["FunctionCallingHandler", "ComputerUseHandler"],
+      },
+    };
+    const details = agentDetails[agentId];
+    if (!details) {
+      res.status(404).json({ error: "Agent not found" });
+      return;
+    }
+    res.status(200).json(details);
+    return;
+  }
+
+  // POST /api/agents/execute
+  if (method === "POST" && pathname === "/api/agents/execute") {
+    const { agentId, input } = req.body;
+    if (!agentId || !input) {
+      res.status(400).json({ error: "agentId and input are required" });
+      return;
+    }
+    const executionId = generateExecutionId();
+    const execution = {
+      executionId,
+      agentId,
+      status: "pending",
+      startedAt: new Date().toISOString(),
+    };
+    executions.set(executionId, execution);
+
+    setImmediate(() => {
+      (execution as any).status = "completed";
+      (execution as any).result = {
+        type: "result",
+        agentId,
+        input,
+        status: "completed",
+        message: "Agent executed successfully",
+      };
+      (execution as any).completedAt = new Date().toISOString();
+    });
+
+    res.status(202).json(execution);
+    return;
+  }
+
+  // GET /api/agents/executions/:executionId
+  const execMatch = pathname.match(/^\/api\/agents\/executions\/([^\/]+)$/);
+  if (method === "GET" && execMatch) {
+    const executionId = execMatch[1];
+    const execution = executions.get(executionId);
+    if (!execution) {
+      res.status(404).json({ error: "Execution not found" });
+      return;
+    }
+    res.status(200).json(execution);
+    return;
+  }
+
+  // GET /api/agents/executions
+  if (method === "GET" && pathname === "/api/agents/executions") {
+    const allExecutions = Array.from(executions.values());
+    res.status(200).json({ total: allExecutions.length, executions: allExecutions });
+    return;
+  }
+
+  res.status(404).json({ error: "Not found" });
+}
 
 async function readBody(req: http.IncomingMessage): Promise<any> {
   const chunks: Buffer[] = [];
@@ -1150,7 +1311,10 @@ function html(): string {
 
 export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: string }> {
   // 11.6: use policy value instead of hardcoded 300
-  const rollbackCooldownSeconds = Math.max(0, Number(opts.policyPublic.rollbackCooldownSeconds ?? 300));
+  const rollbackCooldownSeconds = Math.max(
+    0,
+    Number(opts.policyPublic.rollbackCooldownSeconds ?? 300)
+  );
 
   const server = http.createServer(async (req, res) => {
     if (!req.url) {
@@ -1162,7 +1326,7 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
     const u = new URL(req.url, `http://${req.headers.host ?? "localhost"}`);
 
     // --- MCP API Routes (PHASE 2) ---
-    if (u.pathname.startsWith('/mcp/')) {
+    if (u.pathname.startsWith("/mcp/")) {
       const handled = await handleMcpRequest(u.pathname, req, res);
       if (handled) return;
     }
@@ -1177,7 +1341,13 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
     if (u.pathname === "/api/policy") {
       res.writeHead(200, { "content-type": "application/json" });
       const { rollbackCooldownSeconds: _ignored, ...restPolicy } = opts.policyPublic;
-      res.end(JSON.stringify({ workspaceRoot: opts.workspaceRoot, rollbackCooldownSeconds, ...restPolicy }, null, 2));
+      res.end(
+        JSON.stringify(
+          { workspaceRoot: opts.workspaceRoot, rollbackCooldownSeconds, ...restPolicy },
+          null,
+          2
+        )
+      );
       return;
     }
 
@@ -1201,13 +1371,15 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
 
     const runMatch = u.pathname.match(/^\/api\/runs\/([^/]+)$/);
     if (runMatch && req.method === "GET") {
-      const runId = runMatch[1]!;
+      const runId = runMatch[1];
       try {
         const run = await loadRun(opts.workspaceRoot, runId);
         let bundle: unknown = null;
         try {
           bundle = await loadBundleForSession(opts.workspaceRoot, run.sessionId);
-        } catch { bundle = null; }
+        } catch {
+          bundle = null;
+        }
         const rollbackAvailable = await hasBackup(opts.workspaceRoot, runId);
         // 11.5: cooldown state for UI
         const lastRollbackTs = run.rollback?.ts ?? null;
@@ -1215,12 +1387,32 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
           ? Math.floor((Date.now() - new Date(lastRollbackTs).getTime()) / 1000)
           : null;
         const rollbackInCooldown =
-          typeof lastRollbackAgeSec === "number" && lastRollbackAgeSec >= 0 && lastRollbackAgeSec < rollbackCooldownSeconds;
+          typeof lastRollbackAgeSec === "number" &&
+          lastRollbackAgeSec >= 0 &&
+          lastRollbackAgeSec < rollbackCooldownSeconds;
         res.writeHead(200, { "content-type": "application/json" });
-        res.end(JSON.stringify({ run, bundle, rollbackAvailable, rollbackCooldownSeconds, rollbackInCooldown, lastRollbackAgeSec }, null, 2));
+        res.end(
+          JSON.stringify(
+            {
+              run,
+              bundle,
+              rollbackAvailable,
+              rollbackCooldownSeconds,
+              rollbackInCooldown,
+              lastRollbackAgeSec,
+            },
+            null,
+            2
+          )
+        );
       } catch (e: unknown) {
         res.writeHead(404, { "content-type": "application/json" });
-        res.end(JSON.stringify({ error: "RUN_NOT_FOUND", message: e instanceof Error ? e.message : String(e) }));
+        res.end(
+          JSON.stringify({
+            error: "RUN_NOT_FOUND",
+            message: e instanceof Error ? e.message : String(e),
+          })
+        );
       }
       return;
     }
@@ -1228,7 +1420,7 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
     // 12.5: Timeline endpoint
     const timelineMatch = u.pathname.match(/^\/api\/runs\/([^/]+)\/timeline$/);
     if (timelineMatch && req.method === "GET") {
-      const runId = timelineMatch[1]!;
+      const runId = timelineMatch[1];
       try {
         const run = await loadRun(opts.workspaceRoot, runId);
         const { buildJobsTimeline } = await import("./data/timeline.js");
@@ -1237,14 +1429,19 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
         res.end(JSON.stringify(tl, null, 2));
       } catch (e: unknown) {
         res.writeHead(404, { "content-type": "application/json" });
-        res.end(JSON.stringify({ error: "TIMELINE_FAILED", message: e instanceof Error ? e.message : String(e) }));
+        res.end(
+          JSON.stringify({
+            error: "TIMELINE_FAILED",
+            message: e instanceof Error ? e.message : String(e),
+          })
+        );
       }
       return;
     }
 
     const exportMatch = u.pathname.match(/^\/api\/runs\/([^/]+)\/export$/);
     if (exportMatch && req.method === "GET") {
-      const runId = exportMatch[1]!;
+      const runId = exportMatch[1];
       try {
         const payload = await exportRunJSON(opts.workspaceRoot, runId);
         res.writeHead(200, {
@@ -1254,14 +1451,19 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
         res.end(JSON.stringify(payload, null, 2));
       } catch (e: unknown) {
         res.writeHead(404, { "content-type": "application/json" });
-        res.end(JSON.stringify({ error: "EXPORT_FAILED", message: e instanceof Error ? e.message : String(e) }));
+        res.end(
+          JSON.stringify({
+            error: "EXPORT_FAILED",
+            message: e instanceof Error ? e.message : String(e),
+          })
+        );
       }
       return;
     }
 
     const rollbackMatch = u.pathname.match(/^\/api\/runs\/([^/]+)\/rollback$/);
     if (rollbackMatch && req.method === "POST") {
-      const runId = rollbackMatch[1]!;
+      const runId = rollbackMatch[1];
       const policy = PolicySchema.parse({
         workspaceRoot: opts.workspaceRoot,
         allowWrite: opts.policyPublic.allowWrite,
@@ -1281,25 +1483,39 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
           const ageSec = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
           if (ageSec >= 0 && ageSec < rollbackCooldownSeconds) {
             res.writeHead(409, { "content-type": "application/json" });
-            res.end(JSON.stringify({
-              error: "ALREADY_ROLLED_BACK",
-              message: `Rollback cooldown active (${rollbackCooldownSeconds}s). Try again later.`,
-              rollbackCooldownSeconds,
-              lastRollbackTs: ts,
-              lastRollbackAgeSec: ageSec,
-            }, null, 2));
+            res.end(
+              JSON.stringify(
+                {
+                  error: "ALREADY_ROLLED_BACK",
+                  message: `Rollback cooldown active (${rollbackCooldownSeconds}s). Try again later.`,
+                  rollbackCooldownSeconds,
+                  lastRollbackTs: ts,
+                  lastRollbackAgeSec: ageSec,
+                },
+                null,
+                2
+              )
+            );
             return;
           }
         }
-      } catch { /* run not found, continue */ }
+      } catch {
+        /* run not found, continue */
+      }
       const backupExists = await hasBackup(opts.workspaceRoot, runId);
       if (!backupExists) {
         res.writeHead(404, { "content-type": "application/json" });
-        res.end(JSON.stringify({ error: "NO_BACKUP", message: "No backup folder for runId" }, null, 2));
+        res.end(
+          JSON.stringify({ error: "NO_BACKUP", message: "No backup folder for runId" }, null, 2)
+        );
         return;
       }
       try {
-        const result = await rollbackWorkspace({ workspaceRoot: opts.workspaceRoot, policy, runId });
+        const result = await rollbackWorkspace({
+          workspaceRoot: opts.workspaceRoot,
+          policy,
+          runId,
+        });
         const now = new Date().toISOString();
         const run = await loadRun(opts.workspaceRoot, runId);
         const updatedRun = {
@@ -1320,9 +1536,18 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
         };
         await saveRun(opts.workspaceRoot, updatedRun);
         try {
-          const ev = { ts: now, type: "rollback", source: "dashboard", runId, ok: true, restoredCount: result.restoredCount };
+          const ev = {
+            ts: now,
+            type: "rollback",
+            source: "dashboard",
+            runId,
+            ok: true,
+            restoredCount: result.restoredCount,
+          };
           opts.bus.getSnapshot().push(ev as any);
-        } catch { /* ignore */ }
+        } catch {
+          /* ignore */
+        }
         res.writeHead(200, { "content-type": "application/json" });
         res.end(JSON.stringify({ ok: true, result }, null, 2));
       } catch (e: unknown) {
@@ -1341,27 +1566,49 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
             },
             history: [
               ...run.history,
-              { ts: now, from: run.state, to: run.state, note: "manual rollback failed (dashboard)" },
+              {
+                ts: now,
+                from: run.state,
+                to: run.state,
+                note: "manual rollback failed (dashboard)",
+              },
             ],
           };
           await saveRun(opts.workspaceRoot, updatedRun);
-        } catch { /* ignore */ }
+        } catch {
+          /* ignore */
+        }
         res.writeHead(400, { "content-type": "application/json" });
-        res.end(JSON.stringify({ ok: false, error: "ROLLBACK_FAILED", message: e instanceof Error ? e.message : String(e) }, null, 2));
+        res.end(
+          JSON.stringify(
+            {
+              ok: false,
+              error: "ROLLBACK_FAILED",
+              message: e instanceof Error ? e.message : String(e),
+            },
+            null,
+            2
+          )
+        );
       }
       return;
     }
 
     const replayMatch = u.pathname.match(/^\/api\/runs\/([^/]+)\/replay-dry-run$/);
     if (replayMatch && req.method === "POST") {
-      const runId = replayMatch[1]!;
+      const runId = replayMatch[1];
       try {
         const report = await replayDryRun(opts.workspaceRoot, opts.policyPublic, runId);
         res.writeHead(200, { "content-type": "application/json" });
         res.end(JSON.stringify(report, null, 2));
       } catch (e: unknown) {
         res.writeHead(500, { "content-type": "application/json" });
-        res.end(JSON.stringify({ error: "REPLAY_FAILED", message: e instanceof Error ? e.message : String(e) }));
+        res.end(
+          JSON.stringify({
+            error: "REPLAY_FAILED",
+            message: e instanceof Error ? e.message : String(e),
+          })
+        );
       }
       return;
     }
@@ -1378,7 +1625,12 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
           res.end(JSON.stringify(result, null, 2));
         } catch (e: unknown) {
           res.writeHead(400, { "content-type": "application/json" });
-          res.end(JSON.stringify({ error: "IMPORT_FAILED", message: e instanceof Error ? e.message : String(e) }));
+          res.end(
+            JSON.stringify({
+              error: "IMPORT_FAILED",
+              message: e instanceof Error ? e.message : String(e),
+            })
+          );
         }
       });
       return;
@@ -1392,7 +1644,12 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
         res.end(JSON.stringify(stats, null, 2));
       } catch (e: unknown) {
         res.writeHead(500, { "content-type": "application/json" });
-        res.end(JSON.stringify({ error: "STATS_FAILED", message: e instanceof Error ? e.message : String(e) }));
+        res.end(
+          JSON.stringify({
+            error: "STATS_FAILED",
+            message: e instanceof Error ? e.message : String(e),
+          })
+        );
       }
       return;
     }
@@ -1417,42 +1674,57 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
         res.end(JSON.stringify(result, null, 2));
       } catch (e: unknown) {
         res.writeHead(500, { "content-type": "application/json" });
-        res.end(JSON.stringify({ error: "BATCH_FAILED", message: e instanceof Error ? e.message : String(e) }));
+        res.end(
+          JSON.stringify({
+            error: "BATCH_FAILED",
+            message: e instanceof Error ? e.message : String(e),
+          })
+        );
       }
       return;
     }
 
     const replayGetMatch = u.pathname.match(/^\/api\/replays\/([^/]+)$/);
     if (replayGetMatch && req.method === "GET") {
-      const runId = replayGetMatch[1]!;
+      const runId = replayGetMatch[1];
       try {
         const replay = await loadReplay(opts.workspaceRoot, runId);
         res.writeHead(200, { "content-type": "application/json" });
         res.end(JSON.stringify({ replay }, null, 2));
       } catch (e: unknown) {
         res.writeHead(404, { "content-type": "application/json" });
-        res.end(JSON.stringify({ error: "REPLAY_NOT_FOUND", message: e instanceof Error ? e.message : String(e) }));
+        res.end(
+          JSON.stringify({
+            error: "REPLAY_NOT_FOUND",
+            message: e instanceof Error ? e.message : String(e),
+          })
+        );
       }
       return;
     }
 
     const replayCompareMatch = u.pathname.match(/^\/api\/replays\/([^/]+)\/compare$/);
     if (replayCompareMatch && req.method === "GET") {
-      const runId = replayCompareMatch[1]!;
+      const runId = replayCompareMatch[1];
       try {
         const cmp = await compareRunToReplay(opts.workspaceRoot, runId);
         res.writeHead(200, { "content-type": "application/json" });
         res.end(JSON.stringify(cmp, null, 2));
       } catch (e: unknown) {
         res.writeHead(500, { "content-type": "application/json" });
-        res.end(JSON.stringify({ error: "COMPARE_FAILED", message: e instanceof Error ? e.message : String(e) }));
+        res.end(
+          JSON.stringify({
+            error: "COMPARE_FAILED",
+            message: e instanceof Error ? e.message : String(e),
+          })
+        );
       }
       return;
     }
 
     const replayDlMatch = u.pathname.match(/^\/api\/replays\/([^/]+)\/download$/);
     if (replayDlMatch && req.method === "GET") {
-      const runId = replayDlMatch[1]!;
+      const runId = replayDlMatch[1];
       try {
         const payload = await downloadReplayJSON(opts.workspaceRoot, runId);
         res.writeHead(200, {
@@ -1462,7 +1734,12 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
         res.end(JSON.stringify(payload, null, 2));
       } catch (e: unknown) {
         res.writeHead(404, { "content-type": "application/json" });
-        res.end(JSON.stringify({ error: "REPLAY_NOT_FOUND", message: e instanceof Error ? e.message : String(e) }));
+        res.end(
+          JSON.stringify({
+            error: "REPLAY_NOT_FOUND",
+            message: e instanceof Error ? e.message : String(e),
+          })
+        );
       }
       return;
     }
@@ -1478,14 +1755,19 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
         res.end(JSON.stringify(list, null, 2));
       } catch (e: unknown) {
         res.writeHead(500, { "content-type": "application/json" });
-        res.end(JSON.stringify({ error: "MODES_LIST_FAILED", message: e instanceof Error ? e.message : String(e) }));
+        res.end(
+          JSON.stringify({
+            error: "MODES_LIST_FAILED",
+            message: e instanceof Error ? e.message : String(e),
+          })
+        );
       }
       return;
     }
 
     const modeGetMatch = u.pathname.match(/^\/api\/modes\/([^/]+)$/);
     if (modeGetMatch && req.method === "GET") {
-      const modeId = modeGetMatch[1]!;
+      const modeId = modeGetMatch[1];
       try {
         const detail = await registry.get(modeId);
         if (!detail) {
@@ -1497,35 +1779,50 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
         res.end(JSON.stringify(detail, null, 2));
       } catch (e: unknown) {
         res.writeHead(500, { "content-type": "application/json" });
-        res.end(JSON.stringify({ error: "MODE_GET_FAILED", message: e instanceof Error ? e.message : String(e) }));
+        res.end(
+          JSON.stringify({
+            error: "MODE_GET_FAILED",
+            message: e instanceof Error ? e.message : String(e),
+          })
+        );
       }
       return;
     }
 
     const modeValidateMatch = u.pathname.match(/^\/api\/modes\/([^/]+)\/validate$/);
     if (modeValidateMatch && req.method === "POST") {
-      const modeId = modeValidateMatch[1]!;
+      const modeId = modeValidateMatch[1];
       try {
         const result = await registry.validate(modeId);
         res.writeHead(200, { "content-type": "application/json" });
         res.end(JSON.stringify(result, null, 2));
       } catch (e: unknown) {
         res.writeHead(500, { "content-type": "application/json" });
-        res.end(JSON.stringify({ error: "VALIDATE_FAILED", message: e instanceof Error ? e.message : String(e) }));
+        res.end(
+          JSON.stringify({
+            error: "VALIDATE_FAILED",
+            message: e instanceof Error ? e.message : String(e),
+          })
+        );
       }
       return;
     }
 
     const modeSimulateMatch = u.pathname.match(/^\/api\/modes\/([^/]+)\/simulate$/);
     if (modeSimulateMatch && req.method === "POST") {
-      const modeId = modeSimulateMatch[1]!;
+      const modeId = modeSimulateMatch[1];
       try {
         const result = await registry.simulate(modeId);
         res.writeHead(200, { "content-type": "application/json" });
         res.end(JSON.stringify(result, null, 2));
       } catch (e: unknown) {
         res.writeHead(500, { "content-type": "application/json" });
-        res.end(JSON.stringify({ error: "SIMULATE_FAILED", message: e instanceof Error ? e.message : String(e) }));
+        res.end(
+          JSON.stringify({
+            error: "SIMULATE_FAILED",
+            message: e instanceof Error ? e.message : String(e),
+          })
+        );
       }
       return;
     }
@@ -1559,7 +1856,12 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
         res.end(JSON.stringify(out, null, 2));
       } catch (e: unknown) {
         res.writeHead(500, { "content-type": "application/json" });
-        res.end(JSON.stringify({ error: "PACKS_LIST_FAILED", message: e instanceof Error ? e.message : String(e) }));
+        res.end(
+          JSON.stringify({
+            error: "PACKS_LIST_FAILED",
+            message: e instanceof Error ? e.message : String(e),
+          })
+        );
       }
       return;
     }
@@ -1567,25 +1869,37 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
     // --- 20.1: Pack Ops (validate-all + simulate-all) ---
     if (u.pathname === "/api/reports/packops" && req.method === "GET") {
       res.writeHead(200, { "content-type": "application/json" });
-      res.end(JSON.stringify({ ok: true, reports: listReports(opts.workspaceRoot, "packops") }, null, 2));
+      res.end(
+        JSON.stringify({ ok: true, reports: listReports(opts.workspaceRoot, "packops") }, null, 2)
+      );
       return;
     }
 
     const packopsReportMatch = u.pathname.match(/^\/api\/reports\/packops\/([^/]+)$/);
     if (packopsReportMatch && req.method === "GET") {
-      const id = packopsReportMatch[1]!;
+      const id = packopsReportMatch[1];
       try {
         const report = loadReport(opts.workspaceRoot, "packops", id);
         res.writeHead(200, { "content-type": "application/json" });
         res.end(JSON.stringify({ ok: true, report }, null, 2));
       } catch (e: unknown) {
         res.writeHead(404, { "content-type": "application/json" });
-        res.end(JSON.stringify({ ok: false, error: "REPORT_NOT_FOUND", message: e instanceof Error ? e.message : String(e) }));
+        res.end(
+          JSON.stringify({
+            ok: false,
+            error: "REPORT_NOT_FOUND",
+            message: e instanceof Error ? e.message : String(e),
+          })
+        );
       }
       return;
     }
 
-    if ((u.pathname === "/api/modes/validate-simulate-all" || u.pathname === "/api/packops/validate-simulate-all") && req.method === "POST") {
+    if (
+      (u.pathname === "/api/modes/validate-simulate-all" ||
+        u.pathname === "/api/packops/validate-simulate-all") &&
+      req.method === "POST"
+    ) {
       const chunks: Buffer[] = [];
       req.on("data", (c: Buffer) => chunks.push(c));
       req.on("end", async () => {
@@ -1612,7 +1926,13 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
           res.end(JSON.stringify({ ok: true, ...r }, null, 2));
         } catch (e: unknown) {
           res.writeHead(500, { "content-type": "application/json" });
-          res.end(JSON.stringify({ ok: false, error: "PACKOPS_FAILED", message: e instanceof Error ? e.message : String(e) }));
+          res.end(
+            JSON.stringify({
+              ok: false,
+              error: "PACKOPS_FAILED",
+              message: e instanceof Error ? e.message : String(e),
+            })
+          );
         }
       });
       return;
@@ -1621,20 +1941,28 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
     // --- 20.2: Smoke runs ---
     if (u.pathname === "/api/reports/smoke" && req.method === "GET") {
       res.writeHead(200, { "content-type": "application/json" });
-      res.end(JSON.stringify({ ok: true, reports: listReports(opts.workspaceRoot, "smoke") }, null, 2));
+      res.end(
+        JSON.stringify({ ok: true, reports: listReports(opts.workspaceRoot, "smoke") }, null, 2)
+      );
       return;
     }
 
     const smokeReportMatch = u.pathname.match(/^\/api\/reports\/smoke\/([^/]+)$/);
     if (smokeReportMatch && req.method === "GET") {
-      const id = smokeReportMatch[1]!;
+      const id = smokeReportMatch[1];
       try {
         const report = loadReport(opts.workspaceRoot, "smoke", id);
         res.writeHead(200, { "content-type": "application/json" });
         res.end(JSON.stringify({ ok: true, report }, null, 2));
       } catch (e: unknown) {
         res.writeHead(404, { "content-type": "application/json" });
-        res.end(JSON.stringify({ ok: false, error: "REPORT_NOT_FOUND", message: e instanceof Error ? e.message : String(e) }));
+        res.end(
+          JSON.stringify({
+            ok: false,
+            error: "REPORT_NOT_FOUND",
+            message: e instanceof Error ? e.message : String(e),
+          })
+        );
       }
       return;
     }
@@ -1672,7 +2000,13 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
           res.end(JSON.stringify({ ok: true, ...r }, null, 2));
         } catch (e: unknown) {
           res.writeHead(500, { "content-type": "application/json" });
-          res.end(JSON.stringify({ ok: false, error: "SMOKE_FAILED", message: e instanceof Error ? e.message : String(e) }));
+          res.end(
+            JSON.stringify({
+              ok: false,
+              error: "SMOKE_FAILED",
+              message: e instanceof Error ? e.message : String(e),
+            })
+          );
         }
       });
       return;
@@ -1710,7 +2044,13 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
           res.end(JSON.stringify({ ok: true, result }, null, 2));
         } catch (e: unknown) {
           res.writeHead(400, { "content-type": "application/json" });
-          res.end(JSON.stringify({ ok: false, error: "APPLY_FAILED", message: e instanceof Error ? e.message : String(e) }));
+          res.end(
+            JSON.stringify({
+              ok: false,
+              error: "APPLY_FAILED",
+              message: e instanceof Error ? e.message : String(e),
+            })
+          );
         }
       });
       return;
@@ -1725,7 +2065,7 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
 
     const mhReportMatch = u.pathname.match(/^\/api\/reports\/model-health\/([^/]+)$/);
     if (mhReportMatch && req.method === "GET") {
-      const id = mhReportMatch[1]!;
+      const id = mhReportMatch[1];
       const rep = loadModelHealthReport(opts.workspaceRoot, id);
       if (!rep) {
         res.writeHead(404, { "content-type": "application/json" });
@@ -1749,7 +2089,13 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
           res.end(JSON.stringify({ ok: true, result }, null, 2));
         } catch (e: unknown) {
           res.writeHead(400, { "content-type": "application/json" });
-          res.end(JSON.stringify({ ok: false, error: "BATCH_APPLY_FAILED", message: e instanceof Error ? e.message : String(e) }));
+          res.end(
+            JSON.stringify({
+              ok: false,
+              error: "BATCH_APPLY_FAILED",
+              message: e instanceof Error ? e.message : String(e),
+            })
+          );
         }
       });
       return;
@@ -1764,7 +2110,7 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
 
     const mhBatchReportMatch = u.pathname.match(/^\/api\/reports\/model-health-batch\/([^/]+)$/);
     if (mhBatchReportMatch && req.method === "GET") {
-      const id = mhBatchReportMatch[1]!;
+      const id = mhBatchReportMatch[1];
       const rep = loadModelHealthBatchReport(opts.workspaceRoot, id);
       if (!rep) {
         res.writeHead(404, { "content-type": "application/json" });
@@ -1785,7 +2131,13 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
           const body = chunks.length ? JSON.parse(Buffer.concat(chunks).toString("utf-8")) : {};
           if (!opts.policyPublic.allowGit) {
             res.writeHead(403, { "content-type": "application/json" });
-            res.end(JSON.stringify({ ok: false, error: "POLICY_BLOCK", message: "allowGit=false blocks git operations" }));
+            res.end(
+              JSON.stringify({
+                ok: false,
+                error: "POLICY_BLOCK",
+                message: "allowGit=false blocks git operations",
+              })
+            );
             return;
           }
           const result = runGitBatchOps({
@@ -1796,7 +2148,13 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
           res.end(JSON.stringify({ ok: result.ok, result }, null, 2));
         } catch (e: unknown) {
           res.writeHead(400, { "content-type": "application/json" });
-          res.end(JSON.stringify({ ok: false, error: "GIT_OPS_FAILED", message: e instanceof Error ? e.message : String(e) }));
+          res.end(
+            JSON.stringify({
+              ok: false,
+              error: "GIT_OPS_FAILED",
+              message: e instanceof Error ? e.message : String(e),
+            })
+          );
         }
       });
       return;
@@ -1815,24 +2173,33 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
 
       // Add custom modes from custom_modes.d/ as additional agents
       try {
-        const fsSync = require('fs');
+        const fsSync = require("fs");
         const customModesDir = path.join(opts.workspaceRoot, "custom_modes.d");
         const customModes: any[] = [];
 
         if (fsSync.existsSync(customModesDir)) {
-          const files = fsSync.readdirSync(customModesDir).filter((f: string) => f.endsWith('.yaml') || f.endsWith('.yml'));
+          const files = fsSync
+            .readdirSync(customModesDir)
+            .filter((f: string) => f.endsWith(".yaml") || f.endsWith(".yml"));
           for (const file of files) {
             try {
-              const content = fsSync.readFileSync(path.join(customModesDir, file), 'utf-8');
+              const content = fsSync.readFileSync(path.join(customModesDir, file), "utf-8");
               const yamlContent = content.match(/customModes:\s*\n([\s\S]*)/);
               if (yamlContent) {
                 // Parse YAML manually (simple extraction)
-                const lines = yamlContent[1].split('\n');
+                const lines = yamlContent[1].split("\n");
                 let currentMode: any = null;
                 for (const line of lines) {
                   if (line.match(/^\s*-\s+slug:/)) {
                     if (currentMode) customModes.push(currentMode);
-                    currentMode = { id: '', name: '', tags: [], capabilities: [], isChef: false, isStub: false };
+                    currentMode = {
+                      id: "",
+                      name: "",
+                      tags: [],
+                      capabilities: [],
+                      isChef: false,
+                      isStub: false,
+                    };
                   }
                   const slugMatch = line.match(/slug:\s*(.+)/);
                   if (slugMatch && currentMode) currentMode.id = slugMatch[1].trim();
@@ -1906,10 +2273,22 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
 
           const { catalogPath, catalog } = writeCatalog({ packId, modesDir, packOutDir });
           res.writeHead(200, { "content-type": "application/json" });
-          res.end(JSON.stringify({ ok: true, catalogPath, stats: catalog.stats, count: catalog.count }, null, 2));
+          res.end(
+            JSON.stringify(
+              { ok: true, catalogPath, stats: catalog.stats, count: catalog.count },
+              null,
+              2
+            )
+          );
         } catch (e: unknown) {
           res.writeHead(500, { "content-type": "application/json" });
-          res.end(JSON.stringify({ ok: false, error: "CATALOG_REBUILD_FAILED", message: e instanceof Error ? e.message : String(e) }));
+          res.end(
+            JSON.stringify({
+              ok: false,
+              error: "CATALOG_REBUILD_FAILED",
+              message: e instanceof Error ? e.message : String(e),
+            })
+          );
         }
       });
       return;
@@ -1917,7 +2296,7 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
 
     const catalogModeMatch = u.pathname.match(/^\/api\/catalog\/mode\/([^/]+)$/);
     if (catalogModeMatch && req.method === "GET") {
-      const modeId = decodeURIComponent(catalogModeMatch[1]!);
+      const modeId = decodeURIComponent(catalogModeMatch[1]);
       const packId = u.searchParams.get("packId") ?? "num-pack";
       const packOutDir = path.join(opts.workspaceRoot, "packs", packId);
       const catalog = loadCatalog(packOutDir);
@@ -1966,7 +2345,9 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
           const { installPackFromBundle } = await import("../server/marketplace/install.js");
 
           // Verify trust if policy provided
-          let trustResult: { trusted: boolean; publisher?: string; reason?: string } = { trusted: true };
+          let trustResult: { trusted: boolean; publisher?: string; reason?: string } = {
+            trusted: true,
+          };
           if (trustPolicyPath) {
             trustResult = await verifyPackTrust({
               bundlePath: path.resolve(opts.workspaceRoot, bundlePath),
@@ -1974,7 +2355,14 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
             });
             if (!trustResult.trusted) {
               res.writeHead(403, { "content-type": "application/json" });
-              res.end(JSON.stringify({ ok: false, error: "TRUST_REJECTED", reason: trustResult.reason, publisher: trustResult.publisher }));
+              res.end(
+                JSON.stringify({
+                  ok: false,
+                  error: "TRUST_REJECTED",
+                  reason: trustResult.reason,
+                  publisher: trustResult.publisher,
+                })
+              );
               return;
             }
           }
@@ -1987,7 +2375,11 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
 
           // Rebuild catalog after install
           if (installResult.ok && installResult.packId) {
-            const modesDir = path.join(opts.workspaceRoot, "modes", installResult.packId.replace("-pack", ""));
+            const modesDir = path.join(
+              opts.workspaceRoot,
+              "modes",
+              installResult.packId.replace("-pack", "")
+            );
             const packOutDir = path.join(opts.workspaceRoot, "packs", installResult.packId);
             writeCatalog({ packId: installResult.packId, modesDir, packOutDir });
           }
@@ -1996,7 +2388,13 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
           res.end(JSON.stringify({ ...installResult, trust: trustResult }, null, 2));
         } catch (e: unknown) {
           res.writeHead(500, { "content-type": "application/json" });
-          res.end(JSON.stringify({ ok: false, error: "MARKETPLACE_INSTALL_FAILED", message: e instanceof Error ? e.message : String(e) }));
+          res.end(
+            JSON.stringify({
+              ok: false,
+              error: "MARKETPLACE_INSTALL_FAILED",
+              message: e instanceof Error ? e.message : String(e),
+            })
+          );
         }
       });
       return;
@@ -2011,7 +2409,10 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
 
     if (u.pathname === "/catalog") {
       try {
-        const catalogTemplate = await fs.readFile(path.join(__dirname, "templates", "catalog.html"), "utf-8");
+        const catalogTemplate = await fs.readFile(
+          path.join(__dirname, "templates", "catalog.html"),
+          "utf-8"
+        );
         res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
         res.end(catalogTemplate);
       } catch {
@@ -2023,7 +2424,10 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
 
     if (u.pathname === "/packs") {
       try {
-        const packsTemplate = await fs.readFile(path.join(__dirname, "templates", "packs.html"), "utf-8");
+        const packsTemplate = await fs.readFile(
+          path.join(__dirname, "templates", "packs.html"),
+          "utf-8"
+        );
         res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
         res.end(packsTemplate);
       } catch {
@@ -2035,7 +2439,10 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
 
     if (u.pathname === "/agent") {
       try {
-        const agentTemplate = await fs.readFile(path.join(__dirname, "templates", "agent-detail.html"), "utf-8");
+        const agentTemplate = await fs.readFile(
+          path.join(__dirname, "templates", "agent-detail.html"),
+          "utf-8"
+        );
         res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
         res.end(agentTemplate);
       } catch {
@@ -2047,7 +2454,10 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
 
     if (u.pathname === "/editor") {
       try {
-        const editorTemplate = await fs.readFile(path.join(__dirname, "templates", "editor.html"), "utf-8");
+        const editorTemplate = await fs.readFile(
+          path.join(__dirname, "templates", "editor.html"),
+          "utf-8"
+        );
         res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
         res.end(editorTemplate);
       } catch {
@@ -2059,7 +2469,10 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
 
     if (u.pathname === "/playground") {
       try {
-        const playgroundTemplate = await fs.readFile(path.join(__dirname, "templates", "playground.html"), "utf-8");
+        const playgroundTemplate = await fs.readFile(
+          path.join(__dirname, "templates", "playground.html"),
+          "utf-8"
+        );
         res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
         res.end(playgroundTemplate);
       } catch {
@@ -2071,7 +2484,10 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
 
     if (u.pathname === "/scoring") {
       try {
-        const scoringTemplate = await fs.readFile(path.join(__dirname, "templates", "scoring.html"), "utf-8");
+        const scoringTemplate = await fs.readFile(
+          path.join(__dirname, "templates", "scoring.html"),
+          "utf-8"
+        );
         res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
         res.end(scoringTemplate);
       } catch {
@@ -2188,7 +2604,11 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
       return;
     }
 
-    if (req.method === "GET" && u.pathname.startsWith("/api/agent/") && u.pathname.includes("/runs")) {
+    if (
+      req.method === "GET" &&
+      u.pathname.startsWith("/api/agent/") &&
+      u.pathname.includes("/runs")
+    ) {
       const parts = u.pathname.split("/");
       const modeId = decodeURIComponent(parts[3] || "");
       const limit = parseInt(u.searchParams.get("limit") || "5", 10);
@@ -2198,7 +2618,11 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
       return;
     }
 
-    if (req.method === "GET" && u.pathname.startsWith("/api/agent/") && u.pathname.includes("/health")) {
+    if (
+      req.method === "GET" &&
+      u.pathname.startsWith("/api/agent/") &&
+      u.pathname.includes("/health")
+    ) {
       const parts = u.pathname.split("/");
       const modeId = decodeURIComponent(parts[3] || "");
       const health = getAgentHealth(opts.workspaceRoot, modeId);
@@ -2215,7 +2639,9 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
       try {
         if (!opts.policyPublic.allowWrite) {
           res.writeHead(403, { "content-type": "application/json" });
-          res.end(JSON.stringify({ ok: false, error: "POLICY_BLOCK", message: "allowWrite=false" }));
+          res.end(
+            JSON.stringify({ ok: false, error: "POLICY_BLOCK", message: "allowWrite=false" })
+          );
           return;
         }
         const outModesDir = path.join(opts.workspaceRoot, "modes", "num");
@@ -2224,7 +2650,13 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
         res.end(JSON.stringify({ ok: true, ...result }, null, 2));
       } catch (e: unknown) {
         res.writeHead(400, { "content-type": "application/json" });
-        res.end(JSON.stringify({ ok: false, error: "CREATE_FAILED", message: e instanceof Error ? e.message : String(e) }));
+        res.end(
+          JSON.stringify({
+            ok: false,
+            error: "CREATE_FAILED",
+            message: e instanceof Error ? e.message : String(e),
+          })
+        );
       }
       return;
     }
@@ -2237,7 +2669,9 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
       try {
         if (!opts.policyPublic.allowWrite) {
           res.writeHead(403, { "content-type": "application/json" });
-          res.end(JSON.stringify({ ok: false, error: "POLICY_BLOCK", message: "allowWrite=false" }));
+          res.end(
+            JSON.stringify({ ok: false, error: "POLICY_BLOCK", message: "allowWrite=false" })
+          );
           return;
         }
         const from = await openMode(registry, fromModeId);
@@ -2252,7 +2686,13 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
         res.end(JSON.stringify({ ok: true, ...result }, null, 2));
       } catch (e: unknown) {
         res.writeHead(400, { "content-type": "application/json" });
-        res.end(JSON.stringify({ ok: false, error: "DUPLICATE_FAILED", message: e instanceof Error ? e.message : String(e) }));
+        res.end(
+          JSON.stringify({
+            ok: false,
+            error: "DUPLICATE_FAILED",
+            message: e instanceof Error ? e.message : String(e),
+          })
+        );
       }
       return;
     }
@@ -2278,7 +2718,9 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
       try {
         if (!opts.policyPublic.allowWrite) {
           res.writeHead(403, { "content-type": "application/json" });
-          res.end(JSON.stringify({ ok: false, error: "POLICY_BLOCK", message: "allowWrite=false" }));
+          res.end(
+            JSON.stringify({ ok: false, error: "POLICY_BLOCK", message: "allowWrite=false" })
+          );
           return;
         }
         const outModesDir = path.join(opts.workspaceRoot, "modes", "num");
@@ -2287,7 +2729,13 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
         res.end(JSON.stringify({ ok: true, saved: true, ...result }, null, 2));
       } catch (e: unknown) {
         res.writeHead(400, { "content-type": "application/json" });
-        res.end(JSON.stringify({ ok: false, error: "SAVE_FAILED", message: e instanceof Error ? e.message : String(e) }));
+        res.end(
+          JSON.stringify({
+            ok: false,
+            error: "SAVE_FAILED",
+            message: e instanceof Error ? e.message : String(e),
+          })
+        );
       }
       return;
     }
@@ -2301,7 +2749,13 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
         res.end(JSON.stringify({ ok: result.ok, result: result.result || result.error }, null, 2));
       } catch (e: unknown) {
         res.writeHead(400, { "content-type": "application/json" });
-        res.end(JSON.stringify({ ok: false, error: "VALIDATE_FAILED", message: e instanceof Error ? e.message : String(e) }));
+        res.end(
+          JSON.stringify({
+            ok: false,
+            error: "VALIDATE_FAILED",
+            message: e instanceof Error ? e.message : String(e),
+          })
+        );
       }
       return;
     }
@@ -2315,7 +2769,13 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
         res.end(JSON.stringify({ ok: result.ok, result: result.result || result.error }, null, 2));
       } catch (e: unknown) {
         res.writeHead(400, { "content-type": "application/json" });
-        res.end(JSON.stringify({ ok: false, error: "SIMULATE_FAILED", message: e instanceof Error ? e.message : String(e) }));
+        res.end(
+          JSON.stringify({
+            ok: false,
+            error: "SIMULATE_FAILED",
+            message: e instanceof Error ? e.message : String(e),
+          })
+        );
       }
       return;
     }
@@ -2330,7 +2790,13 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
         res.end(JSON.stringify({ ok: result.ok, result: result.result || result.error }, null, 2));
       } catch (e: unknown) {
         res.writeHead(400, { "content-type": "application/json" });
-        res.end(JSON.stringify({ ok: false, error: "SIMULATE_FAILED", message: e instanceof Error ? e.message : String(e) }));
+        res.end(
+          JSON.stringify({
+            ok: false,
+            error: "SIMULATE_FAILED",
+            message: e instanceof Error ? e.message : String(e),
+          })
+        );
       }
       return;
     }
@@ -2365,7 +2831,13 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
         res.end(JSON.stringify(result, null, 2));
       } catch (e: unknown) {
         res.writeHead(400, { "content-type": "application/json" });
-        res.end(JSON.stringify({ ok: false, error: "PUBLISH_FAILED", message: e instanceof Error ? e.message : String(e) }));
+        res.end(
+          JSON.stringify({
+            ok: false,
+            error: "PUBLISH_FAILED",
+            message: e instanceof Error ? e.message : String(e),
+          })
+        );
       }
       return;
     }
@@ -2378,7 +2850,13 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
         res.end(JSON.stringify(result, null, 2));
       } catch (e: unknown) {
         res.writeHead(400, { "content-type": "application/json" });
-        res.end(JSON.stringify({ ok: false, error: "INSTALL_FAILED", message: e instanceof Error ? e.message : String(e) }));
+        res.end(
+          JSON.stringify({
+            ok: false,
+            error: "INSTALL_FAILED",
+            message: e instanceof Error ? e.message : String(e),
+          })
+        );
       }
       return;
     }
@@ -2390,7 +2868,13 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
         res.end(JSON.stringify({ ok: true, packs }, null, 2));
       } catch (e: unknown) {
         res.writeHead(400, { "content-type": "application/json" });
-        res.end(JSON.stringify({ ok: false, error: "LIST_FAILED", message: e instanceof Error ? e.message : String(e) }));
+        res.end(
+          JSON.stringify({
+            ok: false,
+            error: "LIST_FAILED",
+            message: e instanceof Error ? e.message : String(e),
+          })
+        );
       }
       return;
     }
@@ -2430,7 +2914,13 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
         res.end(JSON.stringify({ ok: true, entry }, null, 2));
       } catch (e: unknown) {
         res.writeHead(400, { "content-type": "application/json" });
-        res.end(JSON.stringify({ ok: false, error: "AUDIT_FAILED", message: e instanceof Error ? e.message : String(e) }));
+        res.end(
+          JSON.stringify({
+            ok: false,
+            error: "AUDIT_FAILED",
+            message: e instanceof Error ? e.message : String(e),
+          })
+        );
       }
       return;
     }
@@ -2462,7 +2952,13 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
         res.end(JSON.stringify({ ok: true, graph: layoutGraph }, null, 2));
       } catch (e: unknown) {
         res.writeHead(400, { "content-type": "application/json" });
-        res.end(JSON.stringify({ ok: false, error: "FLOWGRAPH_FAILED", message: e instanceof Error ? e.message : String(e) }));
+        res.end(
+          JSON.stringify({
+            ok: false,
+            error: "FLOWGRAPH_FAILED",
+            message: e instanceof Error ? e.message : String(e),
+          })
+        );
       }
       return;
     }
@@ -2517,7 +3013,13 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
         res.end(JSON.stringify({ ok: true, published: true }, null, 2));
       } catch (e: unknown) {
         res.writeHead(400, { "content-type": "application/json" });
-        res.end(JSON.stringify({ ok: false, error: "PUBLISH_FAILED", message: e instanceof Error ? e.message : String(e) }));
+        res.end(
+          JSON.stringify({
+            ok: false,
+            error: "PUBLISH_FAILED",
+            message: e instanceof Error ? e.message : String(e),
+          })
+        );
       }
       return;
     }
@@ -2531,7 +3033,13 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
         res.end(JSON.stringify(result, null, 2));
       } catch (e: unknown) {
         res.writeHead(400, { "content-type": "application/json" });
-        res.end(JSON.stringify({ ok: false, error: "GIT_OPS_FAILED", message: e instanceof Error ? e.message : String(e) }));
+        res.end(
+          JSON.stringify({
+            ok: false,
+            error: "GIT_OPS_FAILED",
+            message: e instanceof Error ? e.message : String(e),
+          })
+        );
       }
       return;
     }
@@ -2544,7 +3052,13 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
         res.end(JSON.stringify(result, null, 2));
       } catch (e: unknown) {
         res.writeHead(400, { "content-type": "application/json" });
-        res.end(JSON.stringify({ ok: false, error: "BATCH_OP_FAILED", message: e instanceof Error ? e.message : String(e) }));
+        res.end(
+          JSON.stringify({
+            ok: false,
+            error: "BATCH_OP_FAILED",
+            message: e instanceof Error ? e.message : String(e),
+          })
+        );
       }
       return;
     }
@@ -2557,7 +3071,13 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
         res.end(JSON.stringify(result, null, 2));
       } catch (e: unknown) {
         res.writeHead(400, { "content-type": "application/json" });
-        res.end(JSON.stringify({ ok: false, error: "REPORT_FAILED", message: e instanceof Error ? e.message : String(e) }));
+        res.end(
+          JSON.stringify({
+            ok: false,
+            error: "REPORT_FAILED",
+            message: e instanceof Error ? e.message : String(e),
+          })
+        );
       }
       return;
     }
@@ -2622,13 +3142,33 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
     if (req.method === "GET" && u.pathname === "/api/gemini/handlers") {
       const handlers = [
         { name: "LLMHandler", description: "Multi-provider LLM support", status: "active" },
-        { name: "FunctionCallingHandler", description: "Function calling orchestration", status: "active" },
-        { name: "ComputerUseHandler", description: "Browser automation & UI control", status: "active" },
-        { name: "BatchProcessingHandler", description: "Async batch job management", status: "active" },
-        { name: "CachingTokensHandler", description: "Context caching & token management", status: "active" },
+        {
+          name: "FunctionCallingHandler",
+          description: "Function calling orchestration",
+          status: "active",
+        },
+        {
+          name: "ComputerUseHandler",
+          description: "Browser automation & UI control",
+          status: "active",
+        },
+        {
+          name: "BatchProcessingHandler",
+          description: "Async batch job management",
+          status: "active",
+        },
+        {
+          name: "CachingTokensHandler",
+          description: "Context caching & token management",
+          status: "active",
+        },
         { name: "LongContextHandler", description: "1M+ token context support", status: "active" },
         { name: "EmbeddingsRAGHandler", description: "Embeddings & RAG system", status: "active" },
-        { name: "DeepResearchAgentHandler", description: "Multi-step research agent", status: "active" },
+        {
+          name: "DeepResearchAgentHandler",
+          description: "Multi-step research agent",
+          status: "active",
+        },
         { name: "GeminiConfigManager", description: "Configuration management", status: "active" },
       ];
       res.writeHead(200, { "content-type": "application/json" });
@@ -2651,6 +3191,41 @@ export async function startDashboard(opts: StartDashboardOpts): Promise<{ url: s
       };
       res.writeHead(200, { "content-type": "application/json" });
       res.end(JSON.stringify({ ok: true, flow: status }, null, 2));
+      return;
+    }
+
+    // Delegate to agents REST API
+    if (u.pathname.startsWith("/api/agents")) {
+      const mockReq = { method: req.method, url: u.pathname, body: {} } as any;
+      const mockRes = {
+        status: (code: number) => {
+          res.writeHead(code, { "content-type": "application/json" });
+          return mockRes;
+        },
+        json: (data: unknown) => {
+          res.end(JSON.stringify(data, null, 2));
+        },
+        end: (data: string) => {
+          res.end(data);
+        },
+      } as any;
+
+      // Parse body for POST requests
+      if (req.method === "POST") {
+        const chunks: Buffer[] = [];
+        req.on("data", (c: Buffer) => chunks.push(c));
+        req.on("end", () => {
+          try {
+            mockReq.body = JSON.parse(Buffer.concat(chunks).toString("utf-8"));
+          } catch {
+            mockReq.body = {};
+          }
+          handleAgentRequest(u.pathname, req.method, mockReq, mockRes);
+        });
+        return;
+      }
+
+      handleAgentRequest(u.pathname, req.method, mockReq, mockRes);
       return;
     }
 
