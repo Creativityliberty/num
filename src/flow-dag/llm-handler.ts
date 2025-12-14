@@ -139,8 +139,8 @@ export class LLMHandler {
       throw new Error(`OpenAI API error: ${response.statusText}`);
     }
 
-    const data = await response.json();
-    const content = data.choices[0].message.content;
+    const data = (await response.json()) as any;
+    const content = data?.choices?.[0]?.message?.content || data?.content || "";
 
     // Parse JSON if schema provided
     if (schema) {
@@ -183,8 +183,8 @@ export class LLMHandler {
       throw new Error(`Anthropic API error: ${response.statusText}`);
     }
 
-    const data = await response.json();
-    const content = data.content[0].text;
+    const data = (await response.json()) as any;
+    const content = data?.content?.[0]?.text || data?.text || "";
 
     // Parse JSON if schema provided
     if (schema) {
@@ -218,8 +218,8 @@ export class LLMHandler {
       throw new Error(`Local LLM error: ${response.statusText}`);
     }
 
-    const data = await response.json();
-    const content = data.response;
+    const data = (await response.json()) as any;
+    const content = data?.response || data?.content || "";
 
     // Parse JSON if schema provided
     if (schema) {

@@ -5,6 +5,7 @@ import type { Policy } from "./core/policy.js";
 import { defaultPolicy, loadPolicy } from "./core/policy.js";
 import { startDashboard } from "./dashboard/server.js";
 import { createEventBus } from "./obs/events.js";
+import runOnboarding from "./onboarding/setup.js";
 import { startMcpServer } from "./server/index.js";
 
 // IMPORTANT (MCP stdio): never write logs to stdout.
@@ -85,13 +86,21 @@ function help(): void {
       "mcp-agents-modes",
       "",
       "Usage:",
-      "  mcp-agents-modes serve --modes-path <DIR> [--modes-path <DIR> ...] [--policy <policy.json>] [--no-dashboard] [--dashboard-port <PORT>] [--events-file <PATH>]",
+      "  mcp-agents-modes setup                                           # Interactive setup wizard",
+      "  mcp-agents-modes serve --modes-path <DIR> [options]             # Start MCP server",
+      "",
+      "Serve Options:",
+      "  --modes-path <DIR>              Path to custom modes directory (can be repeated)",
+      "  --policy <policy.json>          Security policy file",
+      "  --no-dashboard                  Disable dashboard UI",
+      "  --dashboard-port <PORT>         Dashboard port (default: 3457)",
+      "  --events-file <PATH>            Event logging file",
       "",
       "Examples:",
-      "  mcp-agents-modes serve --modes-path ./custom_modes.d --modes-path ./agents",
+      "  mcp-agents-modes setup",
+      "  mcp-agents-modes serve --modes-path ./custom_modes.d --dashboard-port 3457",
       "  mcp-agents-modes serve --modes-path ./custom_modes.d --no-dashboard",
-      "  mcp-agents-modes serve --modes-path ./custom_modes.d --events-file ./events.jsonl",
-      "  mcp-agents-modes serve --modes-path ./custom_modes.d --policy ./policy.example.json",
+      "  mcp-agents-modes serve --modes-path ./custom_modes.d --policy ./policy.json",
       "",
     ].join("\n")
   );
@@ -105,6 +114,17 @@ async function main(): Promise<void> {
     return;
   }
 
+  if (cmd === "setup") {
+    try {
+      await runOnboarding();
+      return;
+    } catch (err) {
+      console.error("Setup failed:", err);
+      process.exitCode = 1;
+      return;
+    }
+  }
+
   if (cmd === "serve") {
     const args = parseServeArgs(process.argv.slice(3));
     log.info({ modesPath: args.modesPath }, "Starting MCP server");
@@ -113,9 +133,20 @@ async function main(): Promise<void> {
     let policy: Policy = defaultPolicy();
     if (args.policyPath) {
       policy = await loadPolicy(args.policyPath);
-      log.info({ workspaceRoot: policy.workspaceRoot, allowWrite: policy.allowWrite, allowExec: policy.allowExec, allowGit: policy.allowGit }, "Policy loaded");
+      log.info(
+        {
+          workspaceRoot: policy.workspaceRoot,
+          allowWrite: policy.allowWrite,
+          allowExec: policy.allowExec,
+          allowGit: policy.allowGit,
+        },
+        "Policy loaded"
+      );
     } else {
-      log.info({ workspaceRoot: policy.workspaceRoot }, "No policy provided: default safe policy (write/exec/git disabled)");
+      log.info(
+        { workspaceRoot: policy.workspaceRoot },
+        "No policy provided: default safe policy (write/exec/git disabled)"
+      );
     }
 
     if (args.dashboard) {

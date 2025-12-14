@@ -117,22 +117,22 @@ export async function orchestrateStart(deps: { policy: Policy; bus: EventBus; re
   }
   if (!selected) {
     const modeData = {
-      id: 'unknown',
-      name: 'Unknown Mode',
-      description: '',
+      id: "unknown",
+      name: "Unknown Mode",
+      description: "",
       tags: [],
       categoryPath: [],
       prompts: [],
-      source: '',
+      source: "",
     };
     const mode = {
-      id: modeData.id,
-      name: modeData.name,
-      description: modeData.description,
-      tags: modeData.tags,
-      categoryPath: modeData.categoryPath,
-      prompts: modeData.prompts,
-      source: modeData.source,
+      id: modeData.id || "unknown",
+      name: modeData.name || "Unknown Mode",
+      description: modeData.description || "",
+      tags: modeData.tags || [],
+      categoryPath: modeData.categoryPath || [],
+      prompts: modeData.prompts || {},
+      source: modeData.source || {},
     } as any;
     const run = {
       runId,
@@ -183,7 +183,7 @@ export async function orchestrateStart(deps: { policy: Policy; bus: EventBus; re
         kind: "llm",
         stepId: "plan",
         tool: "modes.planPrompt",
-        promptPack: planPromptPack(selected, sessionId, input.task, "plan", 2),
+        promptPack: planPromptPack(selected as any, sessionId, input.task, "plan", 2),
         expected: "PlanJSON",
       } as NextStep,
     };

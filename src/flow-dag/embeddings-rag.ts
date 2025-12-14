@@ -137,7 +137,7 @@ export class SimilarityCalculator {
   // Calculate cosine similarity
   cosineSimilarity(embedding1: number[], embedding2: number[]): number {
     if (embedding1.length !== embedding2.length) {
-      throw new Error('Embeddings must have same dimension');
+      throw new Error("Embeddings must have same dimension");
     }
 
     let dotProduct = 0;
@@ -173,18 +173,22 @@ export class SimilarityCalculator {
   }
 
   // Find most similar documents
-  findMostSimilar(queryEmbedding: number[], documentEmbeddings: Array<{ text: string; embedding: number[] }>, topK: number = 5): Array<{ text: string; similarity: number }> {
-    const similarities = documentEmbeddings.map(doc => ({
-      text: doc.text || '',
+  findMostSimilar(
+    queryEmbedding: number[],
+    documentEmbeddings: Array<{ text: string; embedding: number[] }>,
+    topK: number = 5
+  ): Array<any> {
+    const similarities = documentEmbeddings.map((doc) => ({
+      text: doc.text || "",
       similarity: this.cosineSimilarity(queryEmbedding, doc.embedding),
     }));
 
     const results = similarities.sort((a, b) => b.similarity - a.similarity).slice(0, topK);
 
-    return results.map(r => ({
-      content: r.text || '',
-      similarity: r.similarity,
-    })) as any;
+    return results.map((r: any) => ({
+      content: r.text || r.content || "",
+      similarity: r.similarity || 0,
+    }));
   }
 }
 
