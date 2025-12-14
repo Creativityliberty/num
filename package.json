@@ -1,6 +1,6 @@
 {
   "name": "num-agents",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Production-ready Multi-Agent Control Plane with Gemini API integration, Flow DAG execution, and comprehensive dashboard.",
   "type": "module",
   "license": "PRIVATE",
