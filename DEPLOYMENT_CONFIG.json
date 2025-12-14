@@ -1,0 +1,72 @@
+{
+  "version": "1.0.0",
+  "name": "num-agents-mcp",
+  "description": "Num Agents v3.0 MCP Server",
+  "server": {
+    "command": "node",
+    "args": [
+      "dist/src/cli.js",
+      "serve",
+      "--modes-path",
+      "./custom_modes.d",
+      "--dashboard",
+      "--dashboard-port",
+      "3457"
+    ],
+    "cwd": ".",
+    "env": {
+      "LOG_LEVEL": "info",
+      "NODE_ENV": "production",
+      "GEMINI_API_KEY": "${GEMINI_API_KEY}"
+    }
+  },
+  "docker": {
+    "image": "node:18-alpine",
+    "port": 3457,
+    "volumes": [
+      "./custom_modes.d:/app/custom_modes.d",
+      "./logs:/app/logs"
+    ],
+    "environment": [
+      "GEMINI_API_KEY=${GEMINI_API_KEY}",
+      "LOG_LEVEL=info"
+    ]
+  },
+  "kubernetes": {
+    "replicas": 3,
+    "resources": {
+      "requests": {
+        "memory": "512Mi",
+        "cpu": "250m"
+      },
+      "limits": {
+        "memory": "1Gi",
+        "cpu": "500m"
+      }
+    },
+    "livenessProbe": {
+      "httpGet": {
+        "path": "/api/flow/status",
+        "port": 3457
+      },
+      "initialDelaySeconds": 30,
+      "periodSeconds": 10
+    }
+  },
+  "monitoring": {
+    "prometheus": true,
+    "grafana": true,
+    "logging": "pino",
+    "metrics": [
+      "requests",
+      "latency",
+      "errors",
+      "tokens_used"
+    ]
+  },
+  "backup": {
+    "enabled": true,
+    "frequency": "daily",
+    "retention": "30 days"
+  }
+}

@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flow Visualizer - Num Agents</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .phase-box {
+      min-height: 200px;
+      transition: all 0.3s ease;
+    }
+    .phase-box:hover {
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+    .flow-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+    .handler-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      margin: 2px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      background-color: #dbeafe;
+      color: #1e40af;
+    }
+    .agent-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      background-color: #f3e8ff;
+      color: #6b21a8;
+    }
+    .status-running {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+  </style>
+</head>
+<body class="bg-gray-50">
+  <div class="flex h-screen">
+    <!-- Sidebar -->
+    <div id="sidebar" class="w-64 bg-white border-r border-gray-200 overflow-y-auto transform -translate-x-full lg:translate-x-0 transition-transform duration-300 fixed lg:static h-full z-40">
+      <div class="p-6">
+        <h1 class="text-2xl font-bold text-gray-900">Num Agents</h1>
+      </div>
+      <nav class="space-y-2 px-4">
+        <a href="/catalog" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">📚 Catalog</a>
+        <a href="/custom-modes" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">⚙️ Custom Modes</a>
+        <a href="/agent-detail" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">👤 Agent Detail</a>
+        <a href="/editor" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">✏️ Editor</a>
+        <a href="/playground" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">🎮 Playground</a>
+        <a href="/scoring" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">📊 Scoring</a>
+        <a href="/gemini-handlers" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">⚡ Gemini Handlers</a>
+        <a href="/flow-visualizer" class="block px-4 py-2 bg-blue-100 text-blue-700 rounded font-semibold">🔄 Flow Visualizer</a>
+      </nav>
+    </div>
+
+    <!-- Overlay for mobile -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 lg:hidden hidden z-30" onclick="toggleSidebar()"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 overflow-auto">
+      <!-- Header -->
+      <div class="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div class="flex items-center justify-between p-6">
+          <div>
+            <h2 class="text-3xl font-bold text-gray-900">Flow Visualizer</h2>
+            <p class="text-gray-600 mt-1">NumFlow orchestration and phase visualization</p>
+          </div>
+          <button onclick="toggleSidebar()" class="lg:hidden p-2 hover:bg-gray-100 rounded">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="p-6">
+        <!-- Flow Control -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h3 class="text-xl font-semibold text-gray-900 mb-4">🎮 Flow Control</h3>
+          <div class="flex gap-4">
+            <button onclick="startFlow()" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">▶️ Start Flow</button>
+            <button onclick="pauseFlow()" class="px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700">⏸️ Pause</button>
+            <button onclick="resetFlow()" class="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">🔄 Reset</button>
+          </div>
+        </div>
+
+        <!-- NumFlow Visualization -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h3 class="text-xl font-semibold text-gray-900 mb-6">📊 NumFlow Phases</h3>
+          
+          <!-- Flow Diagram -->
+          <div class="overflow-x-auto">
+            <div class="flex gap-4 min-w-max pb-4">
+              <!-- Phase 1: Analysis -->
+              <div class="phase-box bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border-2 border-blue-300 p-4 w-64">
+                <div class="flex items-center justify-between mb-3">
+                  <h4 class="text-lg font-bold text-blue-900">1️⃣ Analysis</h4>
+                  <span class="text-2xl">📋</span>
+                </div>
+                <p class="text-sm text-blue-700 mb-3">Analyze requirements and context</p>
+                
+                <div class="mb-3">
+                  <p class="text-xs font-semibold text-blue-900 mb-2">Agent:</p>
+                  <span class="agent-badge">analysis-agent</span>
+                </div>
+                
+                <div>
+                  <p class="text-xs font-semibold text-blue-900 mb-2">Handlers:</p>
+                  <div class="flex flex-wrap gap-1">
+                    <span class="handler-badge">Config</span>
+                    <span class="handler-badge">LLM</span>
+                    <span class="handler-badge">FuncCall</span>
+                  </div>
+                </div>
+                
+                <div class="mt-4 pt-4 border-t border-blue-300">
+                  <p class="text-xs text-blue-600">Status: <span id="phase1-status" class="font-semibold">Ready</span></p>
+                  <p class="text-xs text-blue-600">Duration: <span id="phase1-duration">0ms</span></p>
+                </div>
+              </div>
+
+              <!-- Arrow -->
+              <div class="flow-arrow text-blue-400">→</div>
+
+              <!-- Phase 2: Planning -->
+              <div class="phase-box bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border-2 border-purple-300 p-4 w-64">
+                <div class="flex items-center justify-between mb-3">
+                  <h4 class="text-lg font-bold text-purple-900">2️⃣ Planning</h4>
+                  <span class="text-2xl">📐</span>
+                </div>
+                <p class="text-sm text-purple-700 mb-3">Create detailed plan with context</p>
+                
+                <div class="mb-3">
+                  <p class="text-xs font-semibold text-purple-900 mb-2">Agent:</p>
+                  <span class="agent-badge">planning-agent</span>
+                </div>
+                
+                <div>
+                  <p class="text-xs font-semibold text-purple-900 mb-2">Handlers:</p>
+                  <div class="flex flex-wrap gap-1">
+                    <span class="handler-badge">LLM</span>
+                    <span class="handler-badge">LongCtx</span>
+                    <span class="handler-badge">RAG</span>
+                  </div>
+                </div>
+                
+                <div class="mt-4 pt-4 border-t border-purple-300">
+                  <p class="text-xs text-purple-600">Status: <span id="phase2-status" class="font-semibold">Waiting</span></p>
+                  <p class="text-xs text-purple-600">Duration: <span id="phase2-duration">0ms</span></p>
+                </div>
+              </div>
+
+              <!-- Arrow -->
+              <div class="flow-arrow text-purple-400">→</div>
+
+              <!-- Phase 3: Solutioning -->
+              <div class="phase-box bg-gradient-to-br from-green-50 to-green-100 rounded-lg border-2 border-green-300 p-4 w-64">
+                <div class="flex items-center justify-between mb-3">
+                  <h4 class="text-lg font-bold text-green-900">3️⃣ Solutioning</h4>
+                  <span class="text-2xl">💡</span>
+                </div>
+                <p class="text-sm text-green-700 mb-3">Design solution with research</p>
+                
+                <div class="mb-3">
+                  <p class="text-xs font-semibold text-green-900 mb-2">Agent:</p>
+                  <span class="agent-badge">solutioning-agent</span>
+                </div>
+                
+                <div>
+                  <p class="text-xs font-semibold text-green-900 mb-2">Handlers:</p>
+                  <div class="flex flex-wrap gap-1">
+                    <span class="handler-badge">LLM</span>
+                    <span class="handler-badge">FuncCall</span>
+                    <span class="handler-badge">Computer</span>
+                    <span class="handler-badge">Research</span>
+                  </div>
+                </div>
+                
+                <div class="mt-4 pt-4 border-t border-green-300">
+                  <p class="text-xs text-green-600">Status: <span id="phase3-status" class="font-semibold">Waiting</span></p>
+                  <p class="text-xs text-green-600">Duration: <span id="phase3-duration">0ms</span></p>
+                </div>
+              </div>
+
+              <!-- Arrow -->
+              <div class="flow-arrow text-green-400">→</div>
+
+              <!-- Phase 4: Implementation -->
+              <div class="phase-box bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg border-2 border-orange-300 p-4 w-64">
+                <div class="flex items-center justify-between mb-3">
+                  <h4 class="text-lg font-bold text-orange-900">4️⃣ Implementation</h4>
+                  <span class="text-2xl">🚀</span>
+                </div>
+                <p class="text-sm text-orange-700 mb-3">Execute implementation</p>
+                
+                <div class="mb-3">
+                  <p class="text-xs font-semibold text-orange-900 mb-2">Agent:</p>
+                  <span class="agent-badge">implementation-agent</span>
+                </div>
+                
+                <div>
+                  <p class="text-xs font-semibold text-orange-900 mb-2">Handlers:</p>
+                  <div class="flex flex-wrap gap-1">
+                    <span class="handler-badge">LLM</span>
+                    <span class="handler-badge">Batch</span>
+                    <span class="handler-badge">Cache</span>
+                    <span class="handler-badge">Computer</span>
+                  </div>
+                </div>
+                
+                <div class="mt-4 pt-4 border-t border-orange-300">
+                  <p class="text-xs text-orange-600">Status: <span id="phase4-status" class="font-semibold">Waiting</span></p>
+                  <p class="text-xs text-orange-600">Duration: <span id="phase4-duration">0ms</span></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Flow Statistics -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="bg-white rounded-lg shadow-md p-4">
+            <div class="text-2xl font-bold text-blue-600">4</div>
+            <div class="text-sm text-gray-600">Total Phases</div>
+          </div>
+          <div class="bg-white rounded-lg shadow-md p-4">
+            <div class="text-2xl font-bold text-green-600">28</div>
+            <div class="text-sm text-gray-600">Agents Available</div>
+          </div>
+          <div class="bg-white rounded-lg shadow-md p-4">
+            <div class="text-2xl font-bold text-purple-600">9</div>
+            <div class="text-sm text-gray-600">Handlers Used</div>
+          </div>
+          <div class="bg-white rounded-lg shadow-md p-4">
+            <div class="text-2xl font-bold text-orange-600" id="total-duration">0ms</div>
+            <div class="text-sm text-gray-600">Total Duration</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let flowRunning = false;
+    let flowStartTime = 0;
+
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      sidebar.classList.toggle('-translate-x-full');
+      overlay.classList.toggle('hidden');
+    }
+
+    function startFlow() {
+      if (flowRunning) return;
+      flowRunning = true;
+      flowStartTime = Date.now();
+      
+      // Simulate phase execution
+      executePhase(1, 'Analysis', 500);
+      setTimeout(() => executePhase(2, 'Planning', 600), 600);
+      setTimeout(() => executePhase(3, 'Solutioning', 800), 1300);
+      setTimeout(() => executePhase(4, 'Implementation', 700), 2200);
+      
+      setTimeout(() => {
+        flowRunning = false;
+        updateTotalDuration();
+      }, 3000);
+    }
+
+    function executePhase(phaseNum, phaseName, duration) {
+      const statusEl = document.getElementById(`phase${phaseNum}-status`);
+      const durationEl = document.getElementById(`phase${phaseNum}-duration`);
+      
+      statusEl.textContent = 'Running';
+      statusEl.parentElement.parentElement.classList.add('status-running');
+      
+      setTimeout(() => {
+        statusEl.textContent = 'Completed';
+        statusEl.parentElement.parentElement.classList.remove('status-running');
+        durationEl.textContent = duration + 'ms';
+      }, duration);
+    }
+
+    function pauseFlow() {
+      flowRunning = false;
+      console.log('Flow paused');
+    }
+
+    function resetFlow() {
+      flowRunning = false;
+      for (let i = 1; i <= 4; i++) {
+        document.getElementById(`phase${i}-status`).textContent = 'Ready';
+        document.getElementById(`phase${i}-duration`).textContent = '0ms';
+      }
+      document.getElementById('total-duration').textContent = '0ms';
+    }
+
+    function updateTotalDuration() {
+      const totalMs = Date.now() - flowStartTime;
+      document.getElementById('total-duration').textContent = totalMs + 'ms';
+    }
+  </script>
+</body>
+</html>

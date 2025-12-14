@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+
+    "rootDir": ".",
+    "outDir": "dist",
+
+    "strict": false,
+    "noUncheckedIndexedAccess": false,
+    "useUnknownInCatchVariables": false,
+    "noEmitOnError": false,
+
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": false,
+    "skipLibCheck": true,
+
+    "declaration": false,
+    "sourceMap": false
+  },
+  "include": ["src/**/*"],
+  "exclude": ["dist", "node_modules", "test", "src/flow-dag/gemini-test.ts", "src/flow-dag/system-integration-test.ts"]
+}

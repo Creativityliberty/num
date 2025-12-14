@@ -1,0 +1,457 @@
+{
+  "version": "1.0.0",
+  "description": "Complete MCP Tools Registry for IDE Integration",
+  "lastUpdated": "2025-12-13",
+  "totalTools": 14,
+  "totalHandlers": 9,
+  "totalAgents": 28,
+  "tools": [
+    {
+      "id": 1,
+      "name": "llm-call",
+      "handler": "LLMHandler",
+      "category": "LLM",
+      "description": "Call Gemini API with prompt",
+      "usedBy": ["Analysis Agent", "Planning Agent", "Solutioning Agent", "Implementation Agent"],
+      "example": {
+        "function": "llmCall",
+        "params": {
+          "prompt": "Analyze this code for bugs",
+          "model": "gemini-2.5-flash",
+          "temperature": 0.7,
+          "maxTokens": 2000
+        },
+        "returns": {
+          "response": "string",
+          "tokensUsed": "number",
+          "cost": "string"
+        }
+      },
+      "costOptimization": "Use caching for repeated queries",
+      "priority": "HIGH"
+    },
+    {
+      "id": 2,
+      "name": "function-call",
+      "handler": "FunctionCallingHandler",
+      "category": "Functions",
+      "description": "Execute registered functions",
+      "usedBy": ["Analysis Agent", "Solutioning Agent"],
+      "example": {
+        "function": "functionCall",
+        "params": {
+          "functionName": "calculateComplexity",
+          "args": {
+            "code": "string",
+            "language": "javascript"
+          }
+        },
+        "returns": {
+          "complexity": "string",
+          "score": "number"
+        }
+      },
+      "costOptimization": "Batch function calls",
+      "priority": "HIGH"
+    },
+    {
+      "id": 3,
+      "name": "computer-use",
+      "handler": "ComputerUseHandler",
+      "category": "Automation",
+      "description": "Browser automation and UI control",
+      "usedBy": ["Solutioning Agent", "Implementation Agent"],
+      "example": {
+        "function": "computerUse",
+        "actions": ["screenshot", "click", "type", "scroll"],
+        "params": {
+          "action": "screenshot",
+          "coordinates": [100, 200]
+        },
+        "returns": {
+          "screenshot": "base64",
+          "text": "string"
+        }
+      },
+      "costOptimization": "Combine multiple actions in single call",
+      "priority": "HIGH"
+    },
+    {
+      "id": 4,
+      "name": "batch-submit",
+      "handler": "BatchProcessingHandler",
+      "category": "Batch",
+      "description": "Submit batch jobs for async processing",
+      "usedBy": ["Implementation Agent"],
+      "example": {
+        "function": "batchSubmit",
+        "params": {
+          "requests": [
+            {"prompt": "Task 1", "model": "gemini-2.5-flash"},
+            {"prompt": "Task 2", "model": "gemini-2.5-flash"}
+          ],
+          "displayName": "Batch Analysis"
+        },
+        "returns": {
+          "jobId": "string",
+          "status": "processing|completed"
+        }
+      },
+      "costOptimization": "50% reduction in API calls",
+      "priority": "MEDIUM"
+    },
+    {
+      "id": 5,
+      "name": "caching-tokens",
+      "handler": "CachingTokensHandler",
+      "category": "Optimization",
+      "description": "Manage token caching and optimization",
+      "usedBy": ["Implementation Agent"],
+      "example": {
+        "function": "cachingTokens",
+        "params": {
+          "prompt": "Analyze requirements",
+          "systemPrompt": "You are an expert analyst",
+          "cacheControl": "ephemeral"
+        },
+        "returns": {
+          "cacheKey": "string",
+          "tokensUsed": "number",
+          "tokensSaved": "number"
+        }
+      },
+      "costOptimization": "90% savings on repeated queries",
+      "priority": "MEDIUM"
+    },
+    {
+      "id": 6,
+      "name": "long-context",
+      "handler": "LongContextHandler",
+      "category": "Context",
+      "description": "Process 1M+ token contexts",
+      "usedBy": ["Planning Agent", "Implementation Agent"],
+      "example": {
+        "function": "longContext",
+        "params": {
+          "content": "Very long document (1M+ tokens)",
+          "task": "Summarize key points",
+          "format": "markdown"
+        },
+        "returns": {
+          "summary": "string",
+          "keyPoints": "array",
+          "tokensProcessed": "number"
+        }
+      },
+      "costOptimization": "Process large documents in single call",
+      "priority": "MEDIUM"
+    },
+    {
+      "id": 7,
+      "name": "embeddings",
+      "handler": "EmbeddingsRAGHandler",
+      "category": "RAG",
+      "description": "Generate embeddings for semantic search",
+      "usedBy": ["Planning Agent"],
+      "example": {
+        "function": "embeddings",
+        "params": {
+          "text": "Find similar documents",
+          "model": "embedding-001"
+        },
+        "returns": {
+          "embedding": "array",
+          "dimension": 768
+        }
+      },
+      "costOptimization": "Batch embeddings for multiple texts",
+      "priority": "MEDIUM"
+    },
+    {
+      "id": 8,
+      "name": "rag-retrieve",
+      "handler": "EmbeddingsRAGHandler",
+      "category": "RAG",
+      "description": "Retrieve relevant documents via RAG",
+      "usedBy": ["Planning Agent"],
+      "example": {
+        "function": "ragRetrieve",
+        "params": {
+          "query": "How to implement caching?",
+          "topK": 5,
+          "threshold": 0.7
+        },
+        "returns": {
+          "documents": "array",
+          "scores": "array"
+        }
+      },
+      "costOptimization": "Use embeddings cache for retrieval",
+      "priority": "MEDIUM"
+    },
+    {
+      "id": 9,
+      "name": "research",
+      "handler": "DeepResearchAgentHandler",
+      "category": "Research",
+      "description": "Execute multi-step autonomous research",
+      "usedBy": ["Analysis Agent", "Solutioning Agent"],
+      "example": {
+        "function": "research",
+        "params": {
+          "topic": "Best practices for API design",
+          "depth": "comprehensive",
+          "sources": ["web", "documentation", "examples"]
+        },
+        "returns": {
+          "findings": "array",
+          "sources": "array",
+          "synthesis": "string",
+          "confidence": "number"
+        }
+      },
+      "costOptimization": "Parallel research execution",
+      "priority": "MEDIUM"
+    },
+    {
+      "id": 10,
+      "name": "file-upload",
+      "handler": "LongContextHandler",
+      "category": "Files",
+      "description": "Upload files for processing",
+      "usedBy": ["Implementation Agent"],
+      "example": {
+        "function": "fileUpload",
+        "params": {
+          "filePath": "/path/to/file.pdf",
+          "mimeType": "application/pdf"
+        },
+        "returns": {
+          "fileId": "string",
+          "size": "number",
+          "uploaded": "boolean"
+        }
+      },
+      "costOptimization": "Batch file uploads",
+      "priority": "LOW"
+    },
+    {
+      "id": 11,
+      "name": "file-list",
+      "handler": "LongContextHandler",
+      "category": "Files",
+      "description": "List uploaded files",
+      "usedBy": ["Implementation Agent"],
+      "example": {
+        "function": "fileList",
+        "params": {
+          "filter": "pdf",
+          "limit": 10
+        },
+        "returns": {
+          "files": "array",
+          "total": "number"
+        }
+      },
+      "costOptimization": "Cache file list",
+      "priority": "LOW"
+    },
+    {
+      "id": 12,
+      "name": "file-delete",
+      "handler": "LongContextHandler",
+      "category": "Files",
+      "description": "Delete uploaded files",
+      "usedBy": ["Implementation Agent"],
+      "example": {
+        "function": "fileDelete",
+        "params": {
+          "fileId": "string"
+        },
+        "returns": {
+          "deleted": "boolean",
+          "fileId": "string"
+        }
+      },
+      "costOptimization": "Batch file deletions",
+      "priority": "LOW"
+    },
+    {
+      "id": 13,
+      "name": "pdf-process",
+      "handler": "LongContextHandler",
+      "category": "Media",
+      "description": "Process PDF files",
+      "usedBy": ["Implementation Agent"],
+      "example": {
+        "function": "pdfProcess",
+        "params": {
+          "fileId": "string",
+          "action": "extract",
+          "format": "markdown"
+        },
+        "returns": {
+          "text": "string",
+          "pages": "number",
+          "images": "number",
+          "tables": "number"
+        }
+      },
+      "costOptimization": "Process multiple PDFs in parallel",
+      "priority": "LOW"
+    },
+    {
+      "id": 14,
+      "name": "video-process",
+      "handler": "LongContextHandler",
+      "category": "Media",
+      "description": "Process video files",
+      "usedBy": ["Implementation Agent"],
+      "example": {
+        "function": "videoProcess",
+        "params": {
+          "fileId": "string",
+          "action": "transcribe",
+          "language": "en"
+        },
+        "returns": {
+          "transcript": "string",
+          "duration": "number",
+          "keyFrames": "array",
+          "summary": "string"
+        }
+      },
+      "costOptimization": "Batch video processing",
+      "priority": "LOW"
+    }
+  ],
+  "handlers": [
+    {
+      "name": "LLMHandler",
+      "tools": ["llm-call"],
+      "models": ["gemini-2.5-flash", "gemini-pro", "gemini-1.5-pro"],
+      "features": ["streaming", "caching", "cost-tracking"]
+    },
+    {
+      "name": "FunctionCallingHandler",
+      "tools": ["function-call"],
+      "features": ["auto-retry", "error-handling", "validation"]
+    },
+    {
+      "name": "ComputerUseHandler",
+      "tools": ["computer-use"],
+      "features": ["screenshot", "click", "type", "scroll", "coordinate-normalization"]
+    },
+    {
+      "name": "BatchProcessingHandler",
+      "tools": ["batch-submit"],
+      "features": ["job-management", "cost-optimization", "50%-savings"]
+    },
+    {
+      "name": "CachingTokensHandler",
+      "tools": ["caching-tokens"],
+      "features": ["implicit-caching", "explicit-caching", "90%-savings"]
+    },
+    {
+      "name": "LongContextHandler",
+      "tools": ["long-context", "file-upload", "file-list", "file-delete", "pdf-process", "video-process"],
+      "features": ["1M+-tokens", "pdf-processing", "video-processing", "audio-processing"]
+    },
+    {
+      "name": "EmbeddingsRAGHandler",
+      "tools": ["embeddings", "rag-retrieve"],
+      "features": ["semantic-search", "vector-indexing", "similarity-calculation"]
+    },
+    {
+      "name": "DeepResearchAgentHandler",
+      "tools": ["research"],
+      "features": ["multi-step", "autonomous", "background-execution", "streaming"]
+    },
+    {
+      "name": "GeminiConfigManager",
+      "tools": [],
+      "features": ["api-key-management", "model-management", "cost-calculation"]
+    }
+  ],
+  "agents": [
+    {
+      "name": "Analysis Agent",
+      "tools": ["llm-call", "function-call", "research"],
+      "handlers": ["LLMHandler", "FunctionCallingHandler", "DeepResearchAgentHandler"],
+      "capability": "Analyze requirements, break down problems"
+    },
+    {
+      "name": "Planning Agent",
+      "tools": ["llm-call", "long-context", "rag-retrieve", "embeddings"],
+      "handlers": ["LLMHandler", "LongContextHandler", "EmbeddingsRAGHandler"],
+      "capability": "Create detailed plans with dependencies"
+    },
+    {
+      "name": "Solutioning Agent",
+      "tools": ["llm-call", "function-call", "computer-use", "research"],
+      "handlers": ["LLMHandler", "FunctionCallingHandler", "ComputerUseHandler", "DeepResearchAgentHandler"],
+      "capability": "Design solutions with research"
+    },
+    {
+      "name": "Implementation Agent",
+      "tools": ["llm-call", "batch-submit", "caching-tokens", "computer-use", "file-upload", "file-list", "file-delete", "pdf-process", "video-process"],
+      "handlers": ["LLMHandler", "BatchProcessingHandler", "CachingTokensHandler", "ComputerUseHandler", "LongContextHandler"],
+      "capability": "Execute implementation with optimization"
+    }
+  ],
+  "apiEndpoints": {
+    "listTools": "GET /api/mcp/tools",
+    "listAgents": "GET /api/catalog",
+    "listHandlers": "GET /api/gemini/handlers",
+    "getToolDetails": "GET /api/mcp/tools/:toolId",
+    "executeAgent": "POST /api/playground/simulate",
+    "getFlowStatus": "GET /api/flow/status"
+  },
+  "ideIntegration": {
+    "discoveryFlow": [
+      "IDE calls GET /api/mcp/tools",
+      "IDE displays all 14 tools with handlers",
+      "User selects tools for task",
+      "IDE calls GET /api/catalog to get agents",
+      "IDE displays agents that support selected tools",
+      "User selects agent",
+      "IDE calls POST /api/playground/simulate with task",
+      "IDE displays results with tool execution details"
+    ],
+    "scriptAccess": [
+      "node scripts/use-all-tools.mjs - Show all tools",
+      "node scripts/demo-agent-task.mjs api_key agent_name 'task' - Demo agent",
+      "node scripts/example-real-task.mjs api_key - Real example",
+      "node scripts/ide-mcp-integration.mjs api_key - IDE integration"
+    ],
+    "dashboardAccess": [
+      "http://127.0.0.1:3457 - Main dashboard",
+      "http://127.0.0.1:3457/catalog - Browse agents",
+      "http://127.0.0.1:3457/agent-detail - View agent specs",
+      "http://127.0.0.1:3457/playground - Test agents and tools",
+      "http://127.0.0.1:3457/gemini-handlers - Manage handlers",
+      "http://127.0.0.1:3457/flow-visualizer - Visualize flow"
+    ]
+  },
+  "costOptimization": {
+    "batchProcessing": {
+      "savings": "50%",
+      "tool": "batch-submit",
+      "description": "Reduce API calls by batching requests"
+    },
+    "tokenCaching": {
+      "savings": "90%",
+      "tool": "caching-tokens",
+      "description": "Cache repeated queries and context"
+    },
+    "totalSavings": "45%",
+    "description": "Average savings across all operations"
+  },
+  "status": {
+    "allToolsOperational": true,
+    "allHandlersOperational": true,
+    "allAgentsConfigured": true,
+    "productionReady": true,
+    "lastVerified": "2025-12-13T22:51:00Z"
+  }
+}

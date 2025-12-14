@@ -1,0 +1,388 @@
+{
+  "version": "1.0.0",
+  "name": "MCP Tools IDE Configuration",
+  "description": "Permanent IDE configuration for accessing all 14 MCP tools",
+  "created": "2025-12-13",
+  "mcpServer": {
+    "name": "num-agents",
+    "command": "node",
+    "args": ["dist/src/cli.js", "serve", "--modes-path", "./custom_modes.d", "--dashboard", "--dashboard-port", "3457"],
+    "cwd": ".",
+    "env": {
+      "LOG_LEVEL": "info",
+      "GEMINI_API_KEY": "${GEMINI_API_KEY}"
+    }
+  },
+  "toolsAvailable": {
+    "total": 14,
+    "categories": {
+      "llm": {
+        "name": "LLM & Language Models",
+        "tools": ["llm-call"],
+        "handler": "LLMHandler",
+        "description": "Call Gemini API with prompts"
+      },
+      "functions": {
+        "name": "Function Execution",
+        "tools": ["function-call"],
+        "handler": "FunctionCallingHandler",
+        "description": "Execute registered functions"
+      },
+      "automation": {
+        "name": "Browser Automation",
+        "tools": ["computer-use"],
+        "handler": "ComputerUseHandler",
+        "description": "Control browser and UI"
+      },
+      "batch": {
+        "name": "Batch Processing",
+        "tools": ["batch-submit"],
+        "handler": "BatchProcessingHandler",
+        "description": "Async batch job management (50% savings)"
+      },
+      "optimization": {
+        "name": "Token Optimization",
+        "tools": ["caching-tokens"],
+        "handler": "CachingTokensHandler",
+        "description": "Cache tokens and context (90% savings)"
+      },
+      "context": {
+        "name": "Long Context Processing",
+        "tools": ["long-context"],
+        "handler": "LongContextHandler",
+        "description": "Process 1M+ token documents"
+      },
+      "rag": {
+        "name": "Semantic Search & RAG",
+        "tools": ["embeddings", "rag-retrieve"],
+        "handler": "EmbeddingsRAGHandler",
+        "description": "Vector embeddings and document retrieval"
+      },
+      "research": {
+        "name": "Research & Analysis",
+        "tools": ["research"],
+        "handler": "DeepResearchAgentHandler",
+        "description": "Multi-step autonomous research"
+      },
+      "files": {
+        "name": "File Management",
+        "tools": ["file-upload", "file-list", "file-delete"],
+        "handler": "LongContextHandler",
+        "description": "Upload, list, and delete files"
+      },
+      "media": {
+        "name": "Media Processing",
+        "tools": ["pdf-process", "video-process"],
+        "handler": "LongContextHandler",
+        "description": "Process PDFs and videos"
+      }
+    }
+  },
+  "agentsWithToolAccess": {
+    "analysisAgent": {
+      "name": "Analysis Agent",
+      "tools": ["llm-call", "function-call", "research"],
+      "capability": "Analyze requirements and break down problems"
+    },
+    "planningAgent": {
+      "name": "Planning Agent",
+      "tools": ["llm-call", "long-context", "rag-retrieve", "embeddings"],
+      "capability": "Create detailed plans with dependencies"
+    },
+    "solutioningAgent": {
+      "name": "Solutioning Agent",
+      "tools": ["llm-call", "function-call", "computer-use", "research"],
+      "capability": "Design solutions with research"
+    },
+    "implementationAgent": {
+      "name": "Implementation Agent",
+      "tools": ["llm-call", "batch-submit", "caching-tokens", "computer-use", "file-upload", "file-list", "file-delete", "pdf-process", "video-process"],
+      "capability": "Execute implementation with optimization"
+    },
+    "customModes": {
+      "name": "24 Custom Modes",
+      "tools": ["all 14 tools"],
+      "capability": "Specialized roles with full tool access"
+    }
+  },
+  "apiEndpoints": {
+    "baseUrl": "http://127.0.0.1:3457",
+    "tools": {
+      "listAll": "GET /api/mcp/tools",
+      "getDetails": "GET /api/mcp/tools/:toolId",
+      "execute": "POST /api/mcp/tools/:toolId/execute"
+    },
+    "agents": {
+      "listAll": "GET /api/catalog",
+      "getDetails": "GET /api/catalog/mode/:id",
+      "execute": "POST /api/playground/simulate"
+    },
+    "handlers": {
+      "listAll": "GET /api/gemini/handlers",
+      "getConfig": "GET /api/gemini/config",
+      "test": "GET /api/gemini/test"
+    },
+    "flow": {
+      "status": "GET /api/flow/status",
+      "test": "GET /api/flow/test"
+    }
+  },
+  "ideWorkflows": {
+    "discoverTools": {
+      "steps": [
+        "1. IDE calls GET /api/mcp/tools",
+        "2. Parse response and display all 14 tools",
+        "3. Group tools by category (LLM, Functions, Automation, etc.)",
+        "4. Show handler for each tool",
+        "5. Display cost optimization info"
+      ],
+      "endpoint": "GET /api/mcp/tools",
+      "cacheTime": 3600
+    },
+    "discoverAgents": {
+      "steps": [
+        "1. IDE calls GET /api/catalog",
+        "2. Parse response and display all agents",
+        "3. For each agent, show available tools",
+        "4. Show agent capability and description",
+        "5. Filter agents by selected tools"
+      ],
+      "endpoint": "GET /api/catalog",
+      "cacheTime": 3600
+    },
+    "executeTask": {
+      "steps": [
+        "1. User selects agent from catalog",
+        "2. User enters task description",
+        "3. IDE calls POST /api/playground/simulate",
+        "4. Monitor execution via GET /api/flow/status",
+        "5. Display results with tool execution details"
+      ],
+      "endpoint": "POST /api/playground/simulate",
+      "requestBody": {
+        "agentId": "string",
+        "task": "string",
+        "tools": "array",
+        "handlers": "array"
+      }
+    },
+    "viewToolDetails": {
+      "steps": [
+        "1. User clicks on tool name",
+        "2. IDE calls GET /api/mcp/tools/:toolId",
+        "3. Display tool details: description, handler, usage, examples",
+        "4. Show agents that use this tool",
+        "5. Show cost optimization tips"
+      ],
+      "endpoint": "GET /api/mcp/tools/:toolId"
+    }
+  },
+  "dashboardPages": {
+    "main": "http://127.0.0.1:3457/",
+    "catalog": "http://127.0.0.1:3457/catalog",
+    "agentDetail": "http://127.0.0.1:3457/agent-detail",
+    "editor": "http://127.0.0.1:3457/editor",
+    "playground": "http://127.0.0.1:3457/playground",
+    "scoring": "http://127.0.0.1:3457/scoring",
+    "modelHealth": "http://127.0.0.1:3457/model-health",
+    "geminiHandlers": "http://127.0.0.1:3457/gemini-handlers",
+    "flowVisualizer": "http://127.0.0.1:3457/flow-visualizer",
+    "customModes": "http://127.0.0.1:3457/custom-modes"
+  },
+  "scripts": {
+    "useAllTools": {
+      "path": "scripts/use-all-tools.mjs",
+      "description": "Show all 14 tools with examples",
+      "command": "node scripts/use-all-tools.mjs [API_KEY]"
+    },
+    "demoAgent": {
+      "path": "scripts/demo-agent-task.mjs",
+      "description": "Demo agent execution",
+      "command": "node scripts/demo-agent-task.mjs [API_KEY] [AGENT_NAME] [TASK]"
+    },
+    "realExample": {
+      "path": "scripts/example-real-task.mjs",
+      "description": "Real-world example task",
+      "command": "node scripts/example-real-task.mjs [API_KEY]"
+    },
+    "ideIntegration": {
+      "path": "scripts/ide-mcp-integration.mjs",
+      "description": "IDE integration example",
+      "command": "node scripts/ide-mcp-integration.mjs [API_KEY]"
+    },
+    "buildBundle": {
+      "path": "scripts/build-production-bundle.mjs",
+      "description": "Build production bundle",
+      "command": "node scripts/build-production-bundle.mjs"
+    }
+  },
+  "toolDetails": {
+    "llm-call": {
+      "id": 1,
+      "name": "llm-call",
+      "handler": "LLMHandler",
+      "description": "Call Gemini API with prompt",
+      "agents": ["Analysis Agent", "Planning Agent", "Solutioning Agent", "Implementation Agent"],
+      "example": "const result = await llmCall({ prompt: 'Analyze this', model: 'gemini-2.5-flash' });",
+      "returns": "{ response: string, tokensUsed: number, cost: string }",
+      "costOptimization": "Use caching for repeated queries"
+    },
+    "function-call": {
+      "id": 2,
+      "name": "function-call",
+      "handler": "FunctionCallingHandler",
+      "description": "Execute registered functions",
+      "agents": ["Analysis Agent", "Solutioning Agent"],
+      "example": "const result = await functionCall({ functionName: 'calculateComplexity', args: {...} });",
+      "returns": "{ complexity: string, score: number }",
+      "costOptimization": "Batch function calls"
+    },
+    "computer-use": {
+      "id": 3,
+      "name": "computer-use",
+      "handler": "ComputerUseHandler",
+      "description": "Browser automation and UI control",
+      "agents": ["Solutioning Agent", "Implementation Agent"],
+      "example": "const result = await computerUse({ action: 'screenshot', coordinates: [100, 200] });",
+      "returns": "{ screenshot: base64, text: string }",
+      "costOptimization": "Combine multiple actions in single call"
+    },
+    "batch-submit": {
+      "id": 4,
+      "name": "batch-submit",
+      "handler": "BatchProcessingHandler",
+      "description": "Submit batch jobs for async processing",
+      "agents": ["Implementation Agent"],
+      "example": "const jobId = await batchSubmit({ requests: [...], displayName: 'Batch Analysis' });",
+      "returns": "{ jobId: string, status: 'processing'|'completed' }",
+      "costOptimization": "50% reduction in API calls"
+    },
+    "caching-tokens": {
+      "id": 5,
+      "name": "caching-tokens",
+      "handler": "CachingTokensHandler",
+      "description": "Manage token caching and optimization",
+      "agents": ["Implementation Agent"],
+      "example": "const cached = await cachingTokens({ prompt: 'Analyze', cacheControl: 'ephemeral' });",
+      "returns": "{ cacheKey: string, tokensUsed: number, tokensSaved: number }",
+      "costOptimization": "90% savings on repeated queries"
+    },
+    "long-context": {
+      "id": 6,
+      "name": "long-context",
+      "handler": "LongContextHandler",
+      "description": "Process 1M+ token contexts",
+      "agents": ["Planning Agent", "Implementation Agent"],
+      "example": "const result = await longContext({ content: '...', task: 'Summarize', format: 'markdown' });",
+      "returns": "{ summary: string, keyPoints: array, tokensProcessed: number }",
+      "costOptimization": "Process large documents in single call"
+    },
+    "embeddings": {
+      "id": 7,
+      "name": "embeddings",
+      "handler": "EmbeddingsRAGHandler",
+      "description": "Generate embeddings for semantic search",
+      "agents": ["Planning Agent"],
+      "example": "const embedding = await embeddings({ text: 'Find similar', model: 'embedding-001' });",
+      "returns": "{ embedding: array, dimension: 768 }",
+      "costOptimization": "Batch embeddings for multiple texts"
+    },
+    "rag-retrieve": {
+      "id": 8,
+      "name": "rag-retrieve",
+      "handler": "EmbeddingsRAGHandler",
+      "description": "Retrieve relevant documents via RAG",
+      "agents": ["Planning Agent"],
+      "example": "const results = await ragRetrieve({ query: 'How to cache?', topK: 5, threshold: 0.7 });",
+      "returns": "{ documents: array, scores: array }",
+      "costOptimization": "Use embeddings cache for retrieval"
+    },
+    "research": {
+      "id": 9,
+      "name": "research",
+      "handler": "DeepResearchAgentHandler",
+      "description": "Execute multi-step autonomous research",
+      "agents": ["Analysis Agent", "Solutioning Agent"],
+      "example": "const research = await research({ topic: 'API design', depth: 'comprehensive' });",
+      "returns": "{ findings: array, sources: array, synthesis: string, confidence: number }",
+      "costOptimization": "Parallel research execution"
+    },
+    "file-upload": {
+      "id": 10,
+      "name": "file-upload",
+      "handler": "LongContextHandler",
+      "description": "Upload files for processing",
+      "agents": ["Implementation Agent"],
+      "example": "const uploaded = await fileUpload({ filePath: '/path/file.pdf', mimeType: 'application/pdf' });",
+      "returns": "{ fileId: string, size: number, uploaded: boolean }",
+      "costOptimization": "Batch file uploads"
+    },
+    "file-list": {
+      "id": 11,
+      "name": "file-list",
+      "handler": "LongContextHandler",
+      "description": "List uploaded files",
+      "agents": ["Implementation Agent"],
+      "example": "const files = await fileList({ filter: 'pdf', limit: 10 });",
+      "returns": "{ files: array, total: number }",
+      "costOptimization": "Cache file list"
+    },
+    "file-delete": {
+      "id": 12,
+      "name": "file-delete",
+      "handler": "LongContextHandler",
+      "description": "Delete uploaded files",
+      "agents": ["Implementation Agent"],
+      "example": "const deleted = await fileDelete({ fileId: 'file-123' });",
+      "returns": "{ deleted: boolean, fileId: string }",
+      "costOptimization": "Batch file deletions"
+    },
+    "pdf-process": {
+      "id": 13,
+      "name": "pdf-process",
+      "handler": "LongContextHandler",
+      "description": "Process PDF files",
+      "agents": ["Implementation Agent"],
+      "example": "const processed = await pdfProcess({ fileId: 'file-123', action: 'extract', format: 'markdown' });",
+      "returns": "{ text: string, pages: number, images: number, tables: number }",
+      "costOptimization": "Process multiple PDFs in parallel"
+    },
+    "video-process": {
+      "id": 14,
+      "name": "video-process",
+      "handler": "LongContextHandler",
+      "description": "Process video files",
+      "agents": ["Implementation Agent"],
+      "example": "const processed = await videoProcess({ fileId: 'file-456', action: 'transcribe', language: 'en' });",
+      "returns": "{ transcript: string, duration: number, keyFrames: array, summary: string }",
+      "costOptimization": "Batch video processing"
+    }
+  },
+  "costOptimization": {
+    "batchProcessing": {
+      "tool": "batch-submit",
+      "savings": "50%",
+      "description": "Reduce API calls by batching requests"
+    },
+    "tokenCaching": {
+      "tool": "caching-tokens",
+      "savings": "90%",
+      "description": "Cache repeated queries and context"
+    },
+    "averageSavings": "45%",
+    "tips": [
+      "Use batch-submit for multiple tasks",
+      "Use caching-tokens for repeated queries",
+      "Use long-context for large documents",
+      "Use embeddings + rag-retrieve for semantic search",
+      "Use computer-use for UI automation"
+    ]
+  },
+  "status": {
+    "allToolsOperational": true,
+    "allHandlersOperational": true,
+    "allAgentsConfigured": true,
+    "productionReady": true,
+    "lastVerified": "2025-12-13T22:51:00Z"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "transport": {
+    "type": "http",
+    "baseUrl": "http://localhost:3001",
+    "tokenEnv": "NUM_TOKEN"
+  },
+  "models": {
+    "planner": { "provider": "anthropic", "model": "claude-3-5-sonnet-latest" },
+    "implementer": { "provider": "openai", "model": "gpt-4.1" },
+    "reviewer": { "provider": "anthropic", "model": "claude-3-5-sonnet-latest" },
+    "security": { "provider": "anthropic", "model": "claude-3-5-sonnet-latest" }
+  }
+}

@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: num-agents-mcp
+  labels:
+    app: num-agents-mcp
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: num-agents-mcp
+  template:
+    metadata:
+      labels:
+        app: num-agents-mcp
+    spec:
+      containers:
+      - name: mcp-server
+        image: num-agents-mcp:3.0.0
+        ports:
+        - containerPort: 3457
+        env:
+        - name: LOG_LEVEL
+          value: "info"
+        - name: GEMINI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: mcp-secrets
+              key: gemini-api-key
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /api/flow/status
+            port: 3457
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/flow/status
+            port: 3457
+          initialDelaySeconds: 20
+          periodSeconds: 5
+        volumeMounts:
+        - name: custom-modes
+          mountPath: /app/custom_modes.d
+        - name: logs
+          mountPath: /app/logs
+      volumes:
+      - name: custom-modes
+        configMap:
+          name: custom-modes
+      - name: logs
+        emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: num-agents-mcp-service
+spec:
+  selector:
+    app: num-agents-mcp
+  ports:
+  - protocol: TCP
+    port: 3457
+    targetPort: 3457
+  type: LoadBalancer
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: custom-modes
+data:
+  # Custom modes will be mounted here
+  placeholder: "true"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mcp-secrets
+type: Opaque
+stringData:
+  gemini-api-key: ${GEMINI_API_KEY}

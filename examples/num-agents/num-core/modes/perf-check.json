@@ -1,0 +1,40 @@
+{
+  "id": "perf-check",
+  "name": "Num Perf Check",
+  "description": "Analyze code for performance issues",
+  "tags": ["performance", "optimization", "profiling"],
+  "runtimePolicy": {
+    "model": {
+      "preferred": { "provider": "openai", "model": "gpt-4.1" }
+    },
+    "budget": { "maxCostUsd": 3 }
+  },
+  "flow": {
+    "version": "1",
+    "nodes": [
+      {
+        "id": "plan",
+        "role": "planner",
+        "goal": "Analyze code for performance bottlenecks",
+        "expectedSchema": "multiPlan",
+        "prompt": {
+          "system": "You are a performance engineer. Identify O(n²) loops, memory leaks, unnecessary allocations, and blocking operations.",
+          "user": "Analyze performance of:\n{{task.goal}}\n\nContext:\n{{task.context | json}}"
+        }
+      },
+      {
+        "id": "implement",
+        "role": "implementer",
+        "goal": "Implement performance optimizations",
+        "expectedSchema": "patchCandidate",
+        "prompt": {
+          "system": "You are a performance engineer. Optimize the code while maintaining correctness.",
+          "user": "Optimize based on analysis:\n{{artifacts.plan | json}}"
+        }
+      }
+    ],
+    "edges": [
+      { "from": "plan", "to": "implement" }
+    ]
+  }
+}

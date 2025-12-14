@@ -1,0 +1,196 @@
+<!-- Handler Selector Component for Playground -->
+<div class="bg-white rounded-lg shadow-md p-6 mb-6">
+  <h3 class="text-xl font-semibold text-gray-900 mb-4">⚡ Gemini Handler Configuration</h3>
+  
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Handler Selection -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-2">Select Handler</label>
+      <select id="handlerSelect" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" onchange="updateHandlerConfig()">
+        <option value="">-- Choose a handler --</option>
+        <option value="llm">LLMHandler - Multi-provider LLM</option>
+        <option value="functionCalling">FunctionCallingHandler - Function orchestration</option>
+        <option value="computerUse">ComputerUseHandler - Browser automation</option>
+        <option value="batchProcessing">BatchProcessingHandler - Async batch jobs</option>
+        <option value="cachingTokens">CachingTokensHandler - Context caching</option>
+        <option value="longContext">LongContextHandler - 1M+ tokens</option>
+        <option value="embeddingsRag">EmbeddingsRAGHandler - Semantic search</option>
+        <option value="deepResearch">DeepResearchAgentHandler - Multi-step research</option>
+        <option value="config">GeminiConfigManager - Configuration</option>
+      </select>
+    </div>
+
+    <!-- Model Selection -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-2">Model</label>
+      <select id="modelSelect" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        <option>gemini-2.5-flash</option>
+        <option>gemini-2.5-pro</option>
+        <option>gemini-3-pro-preview</option>
+        <option>gemini-2.0-flash</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Handler-Specific Parameters -->
+  <div id="handlerParams" class="mt-6 pt-6 border-t border-gray-200">
+    <p class="text-sm text-gray-500">Select a handler to configure parameters</p>
+  </div>
+
+  <!-- Token & Cost Preview -->
+  <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="bg-blue-50 rounded-lg p-4">
+      <div class="text-2xl font-bold text-blue-600" id="inputTokens">0</div>
+      <div class="text-sm text-gray-600">Input Tokens</div>
+    </div>
+    <div class="bg-green-50 rounded-lg p-4">
+      <div class="text-2xl font-bold text-green-600" id="outputTokens">0</div>
+      <div class="text-sm text-gray-600">Output Tokens</div>
+    </div>
+    <div class="bg-orange-50 rounded-lg p-4">
+      <div class="text-2xl font-bold text-orange-600" id="estimatedCost">$0.00</div>
+      <div class="text-sm text-gray-600">Estimated Cost</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const handlerConfigs = {
+    llm: {
+      name: 'LLMHandler',
+      description: 'Multi-provider LLM support',
+      params: [
+        { name: 'provider', label: 'Provider', type: 'select', options: ['Gemini', 'OpenAI', 'Anthropic', 'Local'] },
+        { name: 'temperature', label: 'Temperature', type: 'range', min: 0, max: 2, step: 0.1, default: 0.7 },
+        { name: 'maxTokens', label: 'Max Tokens', type: 'number', default: 2048 },
+      ]
+    },
+    functionCalling: {
+      name: 'FunctionCallingHandler',
+      description: 'Function calling orchestration',
+      params: [
+        { name: 'autoExecute', label: 'Auto Execute', type: 'checkbox', default: true },
+        { name: 'maxRetries', label: 'Max Retries', type: 'number', default: 3 },
+        { name: 'timeout', label: 'Timeout (ms)', type: 'number', default: 30000 },
+      ]
+    },
+    computerUse: {
+      name: 'ComputerUseHandler',
+      description: 'Browser automation & UI control',
+      params: [
+        { name: 'headless', label: 'Headless Mode', type: 'checkbox', default: true },
+        { name: 'viewport', label: 'Viewport Size', type: 'select', options: ['1920x1080', '1280x720', '768x1024'] },
+        { name: 'timeout', label: 'Action Timeout (ms)', type: 'number', default: 10000 },
+      ]
+    },
+    batchProcessing: {
+      name: 'BatchProcessingHandler',
+      description: 'Async batch job management',
+      params: [
+        { name: 'batchSize', label: 'Batch Size', type: 'number', default: 100 },
+        { name: 'timeout', label: 'Job Timeout (s)', type: 'number', default: 3600 },
+        { name: 'pollInterval', label: 'Poll Interval (ms)', type: 'number', default: 5000 },
+      ]
+    },
+    cachingTokens: {
+      name: 'CachingTokensHandler',
+      description: 'Context caching & token management',
+      params: [
+        { name: 'cacheType', label: 'Cache Type', type: 'select', options: ['Implicit', 'Explicit', 'Both'] },
+        { name: 'ttl', label: 'TTL (minutes)', type: 'number', default: 60 },
+        { name: 'maxCacheSize', label: 'Max Cache Size (MB)', type: 'number', default: 100 },
+      ]
+    },
+    longContext: {
+      name: 'LongContextHandler',
+      description: '1M+ token context support',
+      params: [
+        { name: 'maxTokens', label: 'Max Tokens', type: 'select', options: ['100K', '500K', '1M'] },
+        { name: 'documentType', label: 'Document Type', type: 'select', options: ['PDF', 'Video', 'Audio', 'Text'] },
+        { name: 'validateTokens', label: 'Validate Tokens', type: 'checkbox', default: true },
+      ]
+    },
+    embeddingsRag: {
+      name: 'EmbeddingsRAGHandler',
+      description: 'Embeddings & RAG system',
+      params: [
+        { name: 'taskType', label: 'Task Type', type: 'select', options: ['Semantic Similarity', 'Classification', 'Clustering', 'Retrieval'] },
+        { name: 'dimension', label: 'Embedding Dimension', type: 'select', options: ['128', '256', '768', '1536', '3072'] },
+        { name: 'topK', label: 'Top K Results', type: 'number', default: 5 },
+      ]
+    },
+    deepResearch: {
+      name: 'DeepResearchAgentHandler',
+      description: 'Multi-step research agent',
+      params: [
+        { name: 'background', label: 'Background Execution', type: 'checkbox', default: true },
+        { name: 'stream', label: 'Enable Streaming', type: 'checkbox', default: false },
+        { name: 'maxTime', label: 'Max Research Time (s)', type: 'number', default: 3600 },
+      ]
+    },
+    config: {
+      name: 'GeminiConfigManager',
+      description: 'Configuration management',
+      params: [
+        { name: 'apiKey', label: 'API Key', type: 'password', default: '' },
+        { name: 'defaultModel', label: 'Default Model', type: 'select', options: ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-3-pro-preview'] },
+      ]
+    }
+  };
+
+  function updateHandlerConfig() {
+    const handlerSelect = document.getElementById('handlerSelect');
+    const handlerKey = handlerSelect.value;
+    const paramsDiv = document.getElementById('handlerParams');
+
+    if (!handlerKey) {
+      paramsDiv.innerHTML = '<p class="text-sm text-gray-500">Select a handler to configure parameters</p>';
+      return;
+    }
+
+    const config = handlerConfigs[handlerKey];
+    let html = `<h4 class="font-semibold text-gray-900 mb-4">${config.name}</h4>`;
+    html += `<p class="text-sm text-gray-600 mb-4">${config.description}</p>`;
+    html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+
+    for (const param of config.params) {
+      html += '<div>';
+      html += `<label class="block text-sm font-medium text-gray-700 mb-2">${param.label}</label>`;
+
+      if (param.type === 'select') {
+        html += `<select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" onchange="calculateCost()">`;
+        for (const option of param.options) {
+          html += `<option>${option}</option>`;
+        }
+        html += '</select>';
+      } else if (param.type === 'checkbox') {
+        html += `<input type="checkbox" ${param.default ? 'checked' : ''} class="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500" onchange="calculateCost()">`;
+      } else if (param.type === 'range') {
+        html += `<input type="range" min="${param.min}" max="${param.max}" step="${param.step}" value="${param.default}" class="w-full" onchange="calculateCost()">`;
+      } else {
+        html += `<input type="${param.type}" value="${param.default}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" onchange="calculateCost()">`;
+      }
+
+      html += '</div>';
+    }
+
+    html += '</div>';
+    paramsDiv.innerHTML = html;
+    calculateCost();
+  }
+
+  function calculateCost() {
+    // Simulate token calculation
+    const inputTokens = Math.floor(Math.random() * 5000) + 1000;
+    const outputTokens = Math.floor(Math.random() * 2000) + 500;
+    
+    // Cost calculation (approximate)
+    const inputCost = (inputTokens / 1000) * 0.000075;
+    const outputCost = (outputTokens / 1000) * 0.0003;
+    const totalCost = inputCost + outputCost;
+
+    document.getElementById('inputTokens').textContent = inputTokens.toLocaleString();
+    document.getElementById('outputTokens').textContent = outputTokens.toLocaleString();
+    document.getElementById('estimatedCost').textContent = '$' + totalCost.toFixed(4);
+  }
+</script>

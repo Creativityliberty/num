@@ -1,0 +1,16 @@
+{
+  "ok": true,
+  "ts": "2025-12-13T14:57:03.541Z",
+  "reportId": "2025-12-13T14-57-03-541Z-num-pack-f70a4d",
+  "packId": "num-pack",
+  "stats": {
+    "total": 0,
+    "valid": 0,
+    "invalid": 0,
+    "simulated": 0,
+    "simulateFailed": 0,
+    "topErrors": {},
+    "topSimErrors": {}
+  },
+  "modes": []
+}

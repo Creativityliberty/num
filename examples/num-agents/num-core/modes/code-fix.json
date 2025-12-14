@@ -1,0 +1,58 @@
+{
+  "id": "code-fix",
+  "name": "Num Code Fix",
+  "description": "Analyze, fix and review code issues",
+  "tags": ["code", "bugfix", "typescript", "javascript"],
+  "runtimePolicy": {
+    "model": {
+      "preferred": { "provider": "openai", "model": "gpt-4.1" },
+      "fallbacks": [{ "provider": "openai", "model": "gpt-4.1-mini" }]
+    },
+    "budget": { "maxCostUsd": 5, "maxTokens": 100000 }
+  },
+  "flow": {
+    "version": "1",
+    "nodes": [
+      {
+        "id": "plan",
+        "role": "planner",
+        "goal": "Analyze the bug and propose fix strategies",
+        "expectedSchema": "multiPlan",
+        "prompt": {
+          "system": "You are a senior software architect specializing in debugging. Analyze the issue thoroughly and propose multiple fix strategies.",
+          "user": "Bug to fix: {{task.goal}}\n\nContext:\n{{task.context | json}}"
+        }
+      },
+      {
+        "id": "implement",
+        "role": "implementer",
+        "goal": "Implement the selected fix",
+        "expectedSchema": "patchCandidate",
+        "runtimePolicy": {
+          "model": { "preferred": { "provider": "openai", "model": "gpt-4.1" } }
+        },
+        "prompt": {
+          "system": "You are a precise software engineer. Implement the fix with minimal changes. Output a valid unified diff patch.",
+          "user": "Implement the fix based on the plan:\n{{artifacts.plan | json}}"
+        }
+      },
+      {
+        "id": "review",
+        "role": "reviewer",
+        "goal": "Review the patch for correctness",
+        "expectedSchema": "reviewReport",
+        "runtimePolicy": {
+          "model": { "preferred": { "provider": "openai", "model": "gpt-4.1-mini" } }
+        },
+        "prompt": {
+          "system": "You are a strict code reviewer. Check for correctness, edge cases, and code style.",
+          "user": "Review this patch:\n{{artifacts.patchCandidate.patch}}"
+        }
+      }
+    ],
+    "edges": [
+      { "from": "plan", "to": "implement" },
+      { "from": "implement", "to": "review" }
+    ]
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "id": "infra-audit",
+  "name": "Num Infra Audit",
+  "description": "Audit infrastructure configuration for best practices",
+  "tags": ["infrastructure", "terraform", "docker", "kubernetes", "devops"],
+  "runtimePolicy": {
+    "model": {
+      "preferred": { "provider": "openai", "model": "gpt-4.1" }
+    },
+    "budget": { "maxCostUsd": 4 }
+  },
+  "flow": {
+    "version": "1",
+    "nodes": [
+      {
+        "id": "review",
+        "role": "reviewer",
+        "goal": "Review infrastructure configuration",
+        "expectedSchema": "reviewReport",
+        "prompt": {
+          "system": "You are an infrastructure expert. Review Terraform, Docker, K8s configs for best practices, cost optimization, and reliability.",
+          "user": "Audit this infrastructure:\n{{task.goal}}\n\nContext:\n{{task.context | json}}"
+        }
+      },
+      {
+        "id": "security",
+        "role": "security",
+        "goal": "Check infrastructure security",
+        "expectedSchema": "securityReport",
+        "prompt": {
+          "system": "You are a cloud security expert. Check for exposed secrets, overly permissive IAM, network misconfigurations, and compliance issues.",
+          "user": "Security audit for:\n{{task.goal}}"
+        }
+      }
+    ],
+    "edges": []
+  }
+}

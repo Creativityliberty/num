@@ -1,0 +1,22 @@
+{
+  "ok": true,
+  "ts": "2025-12-13T15:31:57.585Z",
+  "smokeId": "smoke-2025-12-13T15-31-57-585Z-446f3d",
+  "input": {
+    "packId": "num-pack",
+    "sample": 10,
+    "strategy": "core+chefs",
+    "autoApply": false,
+    "dryRun": true,
+    "modePrefix": "num:"
+  },
+  "selected": [],
+  "chefs": [],
+  "results": [],
+  "summary": {
+    "total": 0,
+    "ok": 0,
+    "failed": 0,
+    "blocked": 0
+  }
+}

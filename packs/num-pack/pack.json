@@ -1,0 +1,7 @@
+{
+  "id": "num-pack",
+  "version": "1.0.0",
+  "name": "Num Pack (imported)",
+  "description": "Imported agents converted to Num Agents modes/flows.",
+  "modesDir": "../../modes/num"
+}

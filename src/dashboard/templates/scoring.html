@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Scoring — MCP Agent Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#059669",
+            "primary-hover": "#047857",
+            "accent": "#34D399",
+            "background-light": "#F8FAFC",
+            "surface-light": "#FFFFFF",
+            "surface-subtle": "#F1F5F9",
+            "border-light": "#E2E8F0",
+            "text-main": "#0F172A",
+            "text-subtle": "#64748B",
+          },
+          fontFamily: {
+            "display": ["Inter", "sans-serif"],
+            "mono": ["JetBrains Mono", "monospace"],
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; vertical-align: text-bottom; }
+  </style>
+</head>
+<body class="bg-background-light text-text-main font-display antialiased min-h-screen flex flex-col">
+
+<!-- Header -->
+<header class="sticky top-0 z-50 w-full bg-surface-light/80 backdrop-blur-xl border-b border-border-light shadow-sm">
+  <div class="px-6 py-3.5 flex items-center justify-between w-full">
+    <div class="flex items-center gap-4">
+      <button onclick="toggleSidebar()" class="p-2 hover:bg-surface-subtle rounded-lg transition-all lg:hidden">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+      <div class="size-9 rounded-xl bg-gradient-to-br from-primary to-emerald-700 flex items-center justify-center text-white shadow-lg shadow-primary/25">
+        <span class="material-symbols-outlined text-[20px]">hub</span>
+      </div>
+      <div>
+        <h1 class="text-lg font-bold tracking-tight text-text-main leading-tight">Scoring</h1>
+        <p class="text-[11px] font-medium text-text-subtle hidden sm:block">Agent leaderboard and recommendations</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Sidebar + Main -->
+<div class="flex flex-1 overflow-hidden">
+  <!-- Sidebar -->
+  <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 w-64 bg-surface-light border-r border-border-light overflow-y-auto z-40 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+    <nav class="p-4 space-y-2">
+      <a href="/" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-text-subtle hover:text-text-main hover:bg-surface-subtle rounded-lg transition-all">
+        <span class="material-symbols-outlined text-[20px]">dashboard</span>
+        Dashboard
+      </a>
+      <a href="/catalog" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-text-subtle hover:text-text-main hover:bg-surface-subtle rounded-lg transition-all">
+        <span class="material-symbols-outlined text-[20px]">list</span>
+        Catalog
+      </a>
+      <a href="/packs" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-text-subtle hover:text-text-main hover:bg-surface-subtle rounded-lg transition-all">
+        <span class="material-symbols-outlined text-[20px]">inventory_2</span>
+        Packs
+      </a>
+      <a href="/agent-detail" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-text-subtle hover:text-text-main hover:bg-surface-subtle rounded-lg transition-all">
+        <span class="material-symbols-outlined text-[20px]">info</span>
+        Agent Detail
+      </a>
+      <a href="/editor" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-text-subtle hover:text-text-main hover:bg-surface-subtle rounded-lg transition-all">
+        <span class="material-symbols-outlined text-[20px]">edit</span>
+        Editor
+      </a>
+      <a href="/playground" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-text-subtle hover:text-text-main hover:bg-surface-subtle rounded-lg transition-all">
+        <span class="material-symbols-outlined text-[20px]">play_arrow</span>
+        Playground
+      </a>
+      <a href="/scoring" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-primary bg-primary/5 rounded-lg transition-all">
+        <span class="material-symbols-outlined text-[20px]">grade</span>
+        Scoring
+      </a>
+      <a href="/model-health" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-text-subtle hover:text-text-main hover:bg-surface-subtle rounded-lg transition-all">
+        <span class="material-symbols-outlined text-[20px]">monitor_heart</span>
+        Model Health
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Overlay for mobile -->
+  <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-30 hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+  <!-- Main Content -->
+  <main class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 space-y-6">
+
+    <!-- Filters -->
+    <div class="bg-surface-light rounded-xl border border-border-light p-6 shadow-sm">
+      <h3 class="text-lg font-bold text-text-main mb-4">Filters</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-text-main mb-2">Range</label>
+          <select id="range" onchange="loadScoring()" class="w-full px-4 py-2 border border-border-light rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20">
+            <option value="7d">Last 7 days</option>
+            <option value="30d">Last 30 days</option>
+            <option value="all">All time</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-text-main mb-2">Search</label>
+          <input id="search" type="text" placeholder="agent id..." onkeyup="loadScoring()" class="w-full px-4 py-2 border border-border-light rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-text-main mb-2">Tag</label>
+          <input id="tag" type="text" placeholder="security, docs..." onkeyup="loadScoring()" class="w-full px-4 py-2 border border-border-light rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leaderboard -->
+    <div class="bg-surface-light rounded-xl border border-border-light shadow-sm overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-surface-subtle border-b border-border-light">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-bold text-text-subtle uppercase tracking-wider">Agent</th>
+              <th class="px-4 py-3 text-left text-xs font-bold text-text-subtle uppercase tracking-wider">Score</th>
+              <th class="px-4 py-3 text-left text-xs font-bold text-text-subtle uppercase tracking-wider">Runs</th>
+              <th class="px-4 py-3 text-left text-xs font-bold text-text-subtle uppercase tracking-wider">Success %</th>
+              <th class="px-4 py-3 text-left text-xs font-bold text-text-subtle uppercase tracking-wider">Avg Duration</th>
+              <th class="px-4 py-3 text-right text-xs font-bold text-text-subtle uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboard" class="divide-y divide-border-light">
+            <tr><td colspan="6" class="px-4 py-8 text-center text-text-subtle">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Suggest -->
+    <div class="bg-surface-light rounded-xl border border-border-light p-6 shadow-sm">
+      <h3 class="text-lg font-bold text-text-main mb-4">Suggest Agents by Goal</h3>
+      <div class="flex gap-2">
+        <input id="goal" type="text" placeholder="Fix CI failing..." class="flex-1 px-4 py-2 border border-border-light rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"/>
+        <button onclick="suggestAgents()" class="px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary-hover transition-all">Suggest</button>
+      </div>
+      <div id="suggestions" class="mt-4 space-y-2"></div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    sidebar.classList.toggle('-translate-x-full');
+    overlay.classList.toggle('hidden');
+  }
+
+  async function get(url) {
+    const r = await fetch(url);
+    return await r.json();
+  }
+
+  async function post(url, body) {
+    const r = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+    return await r.json();
+  }
+
+  function escapeHtml(s) {
+    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  async function loadScoring() {
+    const range = document.getElementById('range').value || '7d';
+    const search = document.getElementById('search').value.trim();
+    const tag = document.getElementById('tag').value.trim();
+    const url = new URL(location.origin + '/api/scoring');
+    url.searchParams.set('range', range);
+    if (search) url.searchParams.set('q', search);
+    if (tag) url.searchParams.set('tag', tag);
+    const res = await get(url.toString());
+    if (!res.ok || !res.items) {
+      document.getElementById('leaderboard').innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-red-500">Error loading scoring</td></tr>';
+      return;
+    }
+    const items = res.items || [];
+    if (!items.length) {
+      document.getElementById('leaderboard').innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-text-subtle">No agents found</td></tr>';
+      return;
+    }
+    document.getElementById('leaderboard').innerHTML = items.map(a => `
+      <tr class="hover:bg-surface-subtle/50 transition-colors">
+        <td class="px-4 py-3"><a href="/agent?id=${encodeURIComponent(a.id)}" class="text-primary hover:text-primary-hover font-medium">${escapeHtml(a.id)}</a></td>
+        <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-bold ${a.score >= 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'} rounded">${a.score}</span></td>
+        <td class="px-4 py-3 text-sm">${a.runs}</td>
+        <td class="px-4 py-3 text-sm">${a.successRate ? Math.round(a.successRate * 100) + '%' : '—'}</td>
+        <td class="px-4 py-3 text-sm">${a.avgDurationMs ? a.avgDurationMs + 'ms' : '—'}</td>
+        <td class="px-4 py-3 text-right">
+          <a href="/agent?id=${encodeURIComponent(a.id)}" class="text-primary hover:text-primary-hover text-sm font-medium">View</a>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  async function suggestAgents() {
+    const goal = document.getElementById('goal').value.trim();
+    if (!goal) return;
+    const res = await post('/api/scoring/suggest', { goal });
+    if (!res.ok || !res.items) {
+      document.getElementById('suggestions').innerHTML = '<div class="text-red-500 text-sm">Error suggesting agents</div>';
+      return;
+    }
+    const items = res.items || [];
+    if (!items.length) {
+      document.getElementById('suggestions').innerHTML = '<div class="text-text-subtle text-sm">No suggestions found</div>';
+      return;
+    }
+    document.getElementById('suggestions').innerHTML = items.map((a, i) => `
+      <div class="p-3 bg-surface-subtle rounded-lg flex items-center justify-between">
+        <div>
+          <div class="font-medium text-text-main">${i + 1}. ${escapeHtml(a.id)}</div>
+          <div class="text-xs text-text-subtle">Score: ${a.score} | Success: ${a.successRate ? Math.round(a.successRate * 100) + '%' : '—'}</div>
+        </div>
+        <a href="/agent?id=${encodeURIComponent(a.id)}" class="text-primary hover:text-primary-hover text-sm font-medium">View</a>
+      </div>
+    `).join('');
+  }
+
+  loadScoring();
+</script>
+
+</body>
+</html>

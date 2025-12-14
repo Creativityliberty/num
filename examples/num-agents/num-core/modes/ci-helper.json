@@ -1,0 +1,40 @@
+{
+  "id": "ci-helper",
+  "name": "Num CI Helper",
+  "description": "Fix CI/CD pipeline issues and failures",
+  "tags": ["ci", "cd", "pipeline", "github-actions", "devops"],
+  "runtimePolicy": {
+    "model": {
+      "preferred": { "provider": "openai", "model": "gpt-4.1" }
+    },
+    "budget": { "maxCostUsd": 3 }
+  },
+  "flow": {
+    "version": "1",
+    "nodes": [
+      {
+        "id": "plan",
+        "role": "planner",
+        "goal": "Analyze CI failure and plan fix",
+        "expectedSchema": "multiPlan",
+        "prompt": {
+          "system": "You are a DevOps engineer. Analyze CI/CD logs and identify the root cause of failures.",
+          "user": "Fix CI issue:\n{{task.goal}}\n\nLogs/Errors:\n{{task.context.errors}}"
+        }
+      },
+      {
+        "id": "implement",
+        "role": "implementer",
+        "goal": "Implement the CI fix",
+        "expectedSchema": "patchCandidate",
+        "prompt": {
+          "system": "You are a DevOps engineer. Fix the CI configuration or code causing the failure.",
+          "user": "Implement fix based on plan:\n{{artifacts.plan | json}}"
+        }
+      }
+    ],
+    "edges": [
+      { "from": "plan", "to": "implement" }
+    ]
+  }
+}

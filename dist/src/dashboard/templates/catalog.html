@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Catalog — MCP Agent Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#059669",
+            "primary-hover": "#047857",
+            "accent": "#34D399",
+            "background-light": "#F8FAFC",
+            "surface-light": "#FFFFFF",
+            "surface-subtle": "#F1F5F9",
+            "border-light": "#E2E8F0",
+            "text-main": "#0F172A",
+            "text-subtle": "#64748B",
+          },
+          fontFamily: {
+            "display": ["Inter", "sans-serif"],
+            "mono": ["JetBrains Mono", "monospace"],
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; vertical-align: text-bottom; }
+  </style>
+</head>
+<body class="bg-background-light text-text-main font-display antialiased min-h-screen flex flex-col">
+
+<!-- Header -->
+<header class="sticky top-0 z-50 w-full bg-surface-light/80 backdrop-blur-xl border-b border-border-light shadow-sm">
+  <div class="px-6 py-3.5 flex items-center justify-between w-full">
+    <div class="flex items-center gap-4">
+      <button onclick="toggleSidebar()" class="p-2 hover:bg-surface-subtle rounded-lg transition-all lg:hidden">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+      <div class="size-9 rounded-xl bg-gradient-to-br from-primary to-emerald-700 flex items-center justify-center text-white shadow-lg shadow-primary/25">
+        <span class="material-symbols-outlined text-[20px]">hub</span>
+      </div>
+      <div>
+        <h1 class="text-lg font-bold tracking-tight text-text-main leading-tight">MCP Agent Dashboard</h1>
+        <p class="text-[11px] font-medium text-text-subtle hidden sm:block">Num Agents v2.0</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Sidebar + Main -->
+<div class="flex flex-1 overflow-hidden">
+  <!-- Sidebar -->
+  <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 w-64 bg-surface-light border-r border-border-light overflow-y-auto z-40 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+    <nav class="p-4 space-y-2">
+      <a href="/" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-text-subtle hover:text-text-main hover:bg-surface-subtle rounded-lg transition-all">
+        <span class="material-symbols-outlined text-[20px]">dashboard</span>
+        Dashboard
+      </a>
+      <a href="/catalog" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-primary bg-primary/5 rounded-lg transition-all">
+        <span class="material-symbols-outlined text-[20px]">list</span>
+        Catalog
+      </a>
+      <a href="/packs" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-text-subtle hover:text-text-main hover:bg-surface-subtle rounded-lg transition-all">
+        <span class="material-symbols-outlined text-[20px]">inventory_2</span>
+        Packs
+      </a>
+      <a href="/agent-detail" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-text-subtle hover:text-text-main hover:bg-surface-subtle rounded-lg transition-all">
+        <span class="material-symbols-outlined text-[20px]">info</span>
+        Agent Detail
+      </a>
+      <a href="/editor" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-text-subtle hover:text-text-main hover:bg-surface-subtle rounded-lg transition-all">
+        <span class="material-symbols-outlined text-[20px]">edit</span>
+        Editor
+      </a>
+      <a href="/playground" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-text-subtle hover:text-text-main hover:bg-surface-subtle rounded-lg transition-all">
+        <span class="material-symbols-outlined text-[20px]">play_arrow</span>
+        Playground
+      </a>
+      <a href="/scoring" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-text-subtle hover:text-text-main hover:bg-surface-subtle rounded-lg transition-all">
+        <span class="material-symbols-outlined text-[20px]">grade</span>
+        Scoring
+      </a>
+      <a href="/model-health" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-text-subtle hover:text-text-main hover:bg-surface-subtle rounded-lg transition-all">
+        <span class="material-symbols-outlined text-[20px]">monitor_heart</span>
+        Model Health
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Overlay for mobile -->
+  <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-30 hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+  <!-- Main Content -->
+  <main class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 space-y-6">
+
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="bg-surface-light rounded-xl border border-border-light p-4 shadow-sm">
+      <div class="text-xs font-bold text-text-subtle uppercase tracking-wider">Total Agents</div>
+      <div id="statTotal" class="text-2xl font-bold text-text-main mt-1">—</div>
+    </div>
+    <div class="bg-surface-light rounded-xl border border-border-light p-4 shadow-sm">
+      <div class="text-xs font-bold text-text-subtle uppercase tracking-wider">Valid</div>
+      <div id="statValid" class="text-2xl font-bold text-primary mt-1">—</div>
+    </div>
+    <div class="bg-surface-light rounded-xl border border-border-light p-4 shadow-sm">
+      <div class="text-xs font-bold text-text-subtle uppercase tracking-wider">Warnings</div>
+      <div id="statWarnings" class="text-2xl font-bold text-yellow-600 mt-1">—</div>
+    </div>
+    <div class="bg-surface-light rounded-xl border border-border-light p-4 shadow-sm">
+      <div class="text-xs font-bold text-text-subtle uppercase tracking-wider">Chefs</div>
+      <div id="statChefs" class="text-2xl font-bold text-blue-600 mt-1">—</div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-surface-light rounded-xl border border-border-light p-4 shadow-sm">
+    <div class="flex flex-wrap items-center gap-4">
+      <div class="relative flex-1 min-w-[200px]">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <span class="material-symbols-outlined text-text-subtle text-[18px]">search</span>
+        </div>
+        <input id="searchInput" class="block w-full pl-10 pr-4 py-2 border border-border-light rounded-lg bg-white text-sm placeholder-text-subtle focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" placeholder="Search agents by id, name, or tag..." type="text" oninput="filterAgents()"/>
+      </div>
+      <select id="tagFilter" onchange="filterAgents()" class="px-4 py-2 bg-white border border-border-light rounded-lg text-sm font-medium text-text-subtle hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/20">
+        <option value="">All Tags</option>
+      </select>
+      <select id="statusFilter" onchange="filterAgents()" class="px-4 py-2 bg-white border border-border-light rounded-lg text-sm font-medium text-text-subtle hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/20">
+        <option value="">All Status</option>
+        <option value="valid">Valid</option>
+        <option value="warning">Warnings</option>
+        <option value="invalid">Invalid</option>
+      </select>
+      <label class="flex items-center gap-2 text-sm font-medium text-text-subtle">
+        <input type="checkbox" id="chefOnly" onchange="filterAgents()" class="rounded border-border-light text-primary focus:ring-primary/20"/>
+        Chef only
+      </label>
+      <button onclick="rebuildCatalog()" class="px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary-hover transition-all flex items-center gap-2">
+        <span class="material-symbols-outlined text-[18px]">refresh</span>
+        Rebuild
+      </button>
+    </div>
+  </div>
+
+  <!-- Agents Table -->
+  <div class="bg-surface-light rounded-xl border border-border-light shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-surface-subtle border-b border-border-light">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-bold text-text-subtle uppercase tracking-wider">Agent ID</th>
+            <th class="px-4 py-3 text-left text-xs font-bold text-text-subtle uppercase tracking-wider">Name</th>
+            <th class="px-4 py-3 text-left text-xs font-bold text-text-subtle uppercase tracking-wider">Tags</th>
+            <th class="px-4 py-3 text-left text-xs font-bold text-text-subtle uppercase tracking-wider">Capabilities</th>
+            <th class="px-4 py-3 text-left text-xs font-bold text-text-subtle uppercase tracking-wider">Chef</th>
+            <th class="px-4 py-3 text-left text-xs font-bold text-text-subtle uppercase tracking-wider">Status</th>
+            <th class="px-4 py-3 text-right text-xs font-bold text-text-subtle uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="agentsTable" class="divide-y divide-border-light">
+          <tr><td colspan="7" class="px-4 py-8 text-center text-text-subtle">Loading catalog...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div class="flex items-center justify-between">
+    <div id="paginationInfo" class="text-sm text-text-subtle">Showing 0 of 0 agents</div>
+    <div class="flex items-center gap-2">
+      <button id="prevPage" onclick="changePage(-1)" class="px-3 py-1.5 text-sm font-medium text-text-subtle bg-white border border-border-light rounded-lg hover:bg-surface-subtle disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+      <span id="pageInfo" class="text-sm font-medium text-text-subtle px-2">Page 1</span>
+      <button id="nextPage" onclick="changePage(1)" class="px-3 py-1.5 text-sm font-medium text-text-subtle bg-white border border-border-light rounded-lg hover:bg-surface-subtle disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
+    </div>
+  </div>
+
+  </main>
+</div>
+
+<script>
+  function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    sidebar.classList.toggle('-translate-x-full');
+    overlay.classList.toggle('hidden');
+  }
+
+  let allAgents = [];
+  let filteredAgents = [];
+  let currentPage = 1;
+  const pageSize = 25;
+  const packId = new URLSearchParams(window.location.search).get('packId') || 'num-pack';
+
+  async function loadCatalog() {
+    try {
+      // Load catalog agents
+      const r = await fetch(`/api/catalog?packId=${encodeURIComponent(packId)}`);
+      const j = await r.json();
+      let catalogAgents = [];
+      let stats = {};
+
+      if (j.ok) {
+        catalogAgents = j.catalog?.modes || j.catalog?.agents || [];
+        stats = j.catalog?.stats || {};
+      }
+
+      // Load custom modes YAML
+      try {
+        const r2 = await fetch('/api/custom-modes');
+        const j2 = await r2.json();
+        if (j2.ok && j2.modes) {
+          catalogAgents = [...catalogAgents, ...j2.modes];
+          stats.total = catalogAgents.length;
+        }
+      } catch (e2) {
+        // Ignore custom modes errors
+      }
+
+      allAgents = catalogAgents;
+      updateStats(stats);
+      populateTagFilter();
+      filterAgents();
+    } catch (e) {
+      document.getElementById('agentsTable').innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-red-500">Error: ${e.message}</td></tr>`;
+    }
+  }
+
+  function updateStats(stats) {
+    document.getElementById('statTotal').textContent = stats.total || allAgents.length;
+    document.getElementById('statValid').textContent = stats.valid || '—';
+    document.getElementById('statWarnings').textContent = stats.warnings || '—';
+    document.getElementById('statChefs').textContent = stats.chefs || '—';
+  }
+
+  function populateTagFilter() {
+    const tags = new Set();
+    allAgents.forEach(a => (a.tags || []).forEach(t => tags.add(t)));
+    const select = document.getElementById('tagFilter');
+    select.innerHTML = '<option value="">All Tags</option>' +
+      Array.from(tags).sort().map(t => `<option value="${t}">${t}</option>`).join('');
+  }
+
+  function filterAgents() {
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const tag = document.getElementById('tagFilter').value;
+    const status = document.getElementById('statusFilter').value;
+    const chefOnly = document.getElementById('chefOnly').checked;
+
+    filteredAgents = allAgents.filter(a => {
+      if (search && !a.id.toLowerCase().includes(search) && !(a.name || '').toLowerCase().includes(search) && !(a.tags || []).some(t => t.toLowerCase().includes(search))) return false;
+      if (tag && !(a.tags || []).includes(tag)) return false;
+      if (status === 'valid' && a.status !== 'valid') return false;
+      if (status === 'warning' && a.status !== 'warning') return false;
+      if (status === 'invalid' && a.status !== 'invalid') return false;
+      if (chefOnly && !a.isChef) return false;
+      return true;
+    });
+
+    currentPage = 1;
+    renderTable();
+  }
+
+  function renderTable() {
+    const start = (currentPage - 1) * pageSize;
+    const end = start + pageSize;
+    const page = filteredAgents.slice(start, end);
+
+    if (!page.length) {
+      document.getElementById('agentsTable').innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-text-subtle">No agents found</td></tr>`;
+    } else {
+      document.getElementById('agentsTable').innerHTML = page.map(a => `
+        <tr class="hover:bg-surface-subtle/50 transition-colors">
+          <td class="px-4 py-3">
+            <span class="font-mono text-sm font-medium text-text-main">${esc(a.id)}</span>
+          </td>
+          <td class="px-4 py-3">
+            <span class="text-sm font-medium text-text-main">${esc(a.name || '—')}</span>
+          </td>
+          <td class="px-4 py-3">
+            <div class="flex flex-wrap gap-1">
+              ${(a.tags || []).slice(0, 3).map(t => `<span class="px-2 py-0.5 text-xs font-medium bg-surface-subtle text-text-subtle rounded-full">${esc(t)}</span>`).join('')}
+              ${(a.tags || []).length > 3 ? `<span class="px-2 py-0.5 text-xs font-medium bg-surface-subtle text-text-subtle rounded-full">+${(a.tags || []).length - 3}</span>` : ''}
+            </div>
+          </td>
+          <td class="px-4 py-3">
+            <div class="flex gap-1">
+              ${a.needsRead ? '<span class="px-1.5 py-0.5 text-[10px] font-bold bg-blue-50 text-blue-600 rounded">READ</span>' : ''}
+              ${a.needsEdit ? '<span class="px-1.5 py-0.5 text-[10px] font-bold bg-yellow-50 text-yellow-600 rounded">EDIT</span>' : ''}
+              ${a.needsCommand ? '<span class="px-1.5 py-0.5 text-[10px] font-bold bg-red-50 text-red-600 rounded">CMD</span>' : ''}
+              ${a.needsMcp ? '<span class="px-1.5 py-0.5 text-[10px] font-bold bg-purple-50 text-purple-600 rounded">MCP</span>' : ''}
+            </div>
+          </td>
+          <td class="px-4 py-3">
+            ${a.isChef ? '<span class="px-2 py-0.5 text-xs font-bold bg-primary/10 text-primary rounded-full">Chef</span>' : a.isStub ? '<span class="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-500 rounded-full">Stub</span>' : '—'}
+          </td>
+          <td class="px-4 py-3">
+            ${a.status === 'valid' ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-bold bg-green-50 text-green-600 rounded-full"><span class="size-1.5 rounded-full bg-green-500"></span>Valid</span>' :
+              a.status === 'warning' ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-bold bg-yellow-50 text-yellow-600 rounded-full"><span class="size-1.5 rounded-full bg-yellow-500"></span>Warning</span>' :
+              '<span class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-bold bg-red-50 text-red-600 rounded-full"><span class="size-1.5 rounded-full bg-red-500"></span>Invalid</span>'}
+          </td>
+          <td class="px-4 py-3 text-right">
+            <div class="flex items-center justify-end gap-1">
+              <button onclick="viewAgent('${esc(a.id)}')" class="p-1.5 text-text-subtle hover:text-primary hover:bg-primary/5 rounded-lg transition-all" title="View">
+                <span class="material-symbols-outlined text-[18px]">visibility</span>
+              </button>
+              <button onclick="simulateAgent('${esc(a.id)}')" class="p-1.5 text-text-subtle hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="Simulate">
+                <span class="material-symbols-outlined text-[18px]">play_arrow</span>
+              </button>
+              <button onclick="smokeAgent('${esc(a.id)}')" class="p-1.5 text-text-subtle hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-all" title="Smoke">
+                <span class="material-symbols-outlined text-[18px]">science</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    document.getElementById('paginationInfo').textContent = `Showing ${start + 1}-${Math.min(end, filteredAgents.length)} of ${filteredAgents.length} agents`;
+    document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${Math.ceil(filteredAgents.length / pageSize) || 1}`;
+    document.getElementById('prevPage').disabled = currentPage <= 1;
+    document.getElementById('nextPage').disabled = end >= filteredAgents.length;
+  }
+
+  function changePage(delta) {
+    currentPage += delta;
+    renderTable();
+  }
+
+  function esc(s) {
+    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  async function rebuildCatalog() {
+    const btn = event.target;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">refresh</span> Rebuilding...';
+    try {
+      const r = await fetch('/api/catalog/rebuild', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ packId }) });
+      const j = await r.json();
+      if (j.ok) {
+        await loadCatalog();
+        alert(`Catalog rebuilt: ${j.count} agents`);
+      } else {
+        alert('Rebuild failed: ' + (j.error || 'unknown'));
+      }
+    } catch (e) {
+      alert('Error: ' + e.message);
+    }
+    btn.disabled = false;
+    btn.innerHTML = '<span class="material-symbols-outlined text-[18px]">refresh</span> Rebuild';
+  }
+
+  function viewAgent(id) {
+    window.location.href = `/api/catalog/mode/${encodeURIComponent(id)}?packId=${encodeURIComponent(packId)}`;
+  }
+
+  async function simulateAgent(id) {
+    alert(`Simulate agent: ${id}\n(Coming soon)`);
+  }
+
+  async function smokeAgent(id) {
+    alert(`Smoke agent: ${id}\n(Coming soon)`);
+  }
+
+  loadCatalog();
+</script>
+
+</body>
+</html>

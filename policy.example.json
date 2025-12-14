@@ -1,0 +1,36 @@
+{
+  "workspaceRoot": "/ABS/PATH/TO/REPO",
+  "allowWrite": true,
+  "allowExec": true,
+  "allowGit": true,
+  "maxPatchBytes": 2000000,
+  "maxFilesChanged": 400,
+  "allowedCommands": [
+    "npm test",
+    "npm run lint",
+    "npm run build",
+    "npm run typecheck",
+    "npm run ci",
+    "pytest",
+    "pytest -v"
+  ],
+  "exec": {
+    "allowedExecutables": ["npm", "npx", "pnpm", "yarn", "node", "pytest", "python"],
+    "allowedArgs": {
+      "npm": [["test"], ["run", "lint"], ["run", "build"], ["run", "typecheck"], ["run", "ci"]],
+      "npx": [["vitest"], ["vitest", "run"], ["eslint", "."], ["tsc", "--noEmit"]],
+      "pytest": [[], ["-v"], ["-v", "--tb=short"]],
+      "node": [["-v"], ["--version"]]
+    }
+  },
+  "allowedWritePaths": ["src/**", "packages/**", "test/**", ".mcp/**"],
+  "blockedWritePaths": [".git/**", "node_modules/**"],
+  "requireConfirmationFor": ["applyPatch", "exec", "branch", "commit"],
+  "rollbackCooldownSeconds": 300,
+  "git": {
+    "allowedBranchPrefixes": ["mcp/", "fix/", "feat/"],
+    "allowCommit": true,
+    "commitMessagePattern": "^.{5,120}$",
+    "allowPush": false
+  }
+}

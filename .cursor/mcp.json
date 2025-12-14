@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "num-agents": {
+      "url": "http://localhost:3001",
+      "type": "http",
+      "headers": {
+        "Authorization": "Bearer ${NUM_TOKEN}"
+      }
+    }
+  }
+}

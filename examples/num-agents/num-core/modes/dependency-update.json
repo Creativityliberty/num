@@ -1,0 +1,51 @@
+{
+  "id": "dependency-update",
+  "name": "Num Dependency Update",
+  "description": "Update and audit project dependencies",
+  "tags": ["dependencies", "npm", "security", "update"],
+  "runtimePolicy": {
+    "model": {
+      "preferred": { "provider": "openai", "model": "gpt-4.1-mini" }
+    },
+    "budget": { "maxCostUsd": 2 }
+  },
+  "flow": {
+    "version": "1",
+    "nodes": [
+      {
+        "id": "plan",
+        "role": "planner",
+        "goal": "Analyze dependencies and plan updates",
+        "expectedSchema": "multiPlan",
+        "prompt": {
+          "system": "You are a dependency management expert. Analyze package.json, identify outdated/vulnerable packages, and plan safe updates.",
+          "user": "Update dependencies for:\n{{task.goal}}\n\nContext:\n{{task.context | json}}"
+        }
+      },
+      {
+        "id": "implement",
+        "role": "implementer",
+        "goal": "Update package.json and lock files",
+        "expectedSchema": "patchCandidate",
+        "prompt": {
+          "system": "You are a dependency management expert. Update packages safely, respecting semver.",
+          "user": "Update based on plan:\n{{artifacts.plan | json}}"
+        }
+      },
+      {
+        "id": "security",
+        "role": "security",
+        "goal": "Audit updated dependencies for vulnerabilities",
+        "expectedSchema": "securityReport",
+        "prompt": {
+          "system": "You are a security auditor. Check updated dependencies for known vulnerabilities.",
+          "user": "Audit these dependency changes:\n{{artifacts.patchCandidate.patch}}"
+        }
+      }
+    ],
+    "edges": [
+      { "from": "plan", "to": "implement" },
+      { "from": "implement", "to": "security" }
+    ]
+  }
+}

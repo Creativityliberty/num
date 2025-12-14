@@ -1,0 +1,38 @@
+{
+  "name": "Num Agents v3.0 - MCP Server Bundle",
+  "version": "3.0.0",
+  "description": "Complete MCP server with 28 agents, 9 handlers, 14 tools",
+  "created": "2025-12-13T22:02:02.807Z",
+  "bundleType": "production",
+  "components": {
+    "agents": 28,
+    "handlers": 9,
+    "tools": 14,
+    "pages": 10,
+    "endpoints": 6,
+    "scripts": 12
+  },
+  "server": {
+    "type": "Node.js HTTP Server",
+    "port": 3457,
+    "dashboard": true,
+    "websocket": true
+  },
+  "deployment": {
+    "docker": true,
+    "kubernetes": true,
+    "standalone": true
+  },
+  "features": [
+    "Multi-agent orchestration",
+    "Gemini API integration",
+    "NumFlow DAG execution",
+    "Token caching (90% savings)",
+    "Batch processing (50% savings)",
+    "Long context support (1M+ tokens)",
+    "RAG with embeddings",
+    "Browser automation",
+    "PDF/Video processing",
+    "Real-time dashboard"
+  ]
+}

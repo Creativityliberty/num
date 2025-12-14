@@ -1,0 +1,38 @@
+{
+  "id": "api-review",
+  "name": "Num API Review",
+  "description": "Review API design and implementation",
+  "tags": ["api", "rest", "graphql", "design"],
+  "runtimePolicy": {
+    "model": {
+      "preferred": { "provider": "openai", "model": "gpt-4.1" }
+    },
+    "budget": { "maxCostUsd": 3 }
+  },
+  "flow": {
+    "version": "1",
+    "nodes": [
+      {
+        "id": "review",
+        "role": "reviewer",
+        "goal": "Review API design and implementation",
+        "expectedSchema": "reviewReport",
+        "prompt": {
+          "system": "You are an API design expert. Review for RESTful principles, consistency, versioning, error handling, and security.",
+          "user": "Review this API:\n{{task.goal}}\n\nContext:\n{{task.context | json}}"
+        }
+      },
+      {
+        "id": "security",
+        "role": "security",
+        "goal": "Check API security",
+        "expectedSchema": "securityReport",
+        "prompt": {
+          "system": "You are an API security expert. Check for authentication, authorization, rate limiting, and data validation issues.",
+          "user": "Security review for API:\n{{task.goal}}"
+        }
+      }
+    ],
+    "edges": []
+  }
+}

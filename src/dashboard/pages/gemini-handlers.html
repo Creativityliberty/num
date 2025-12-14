@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gemini Handlers - Num Agents</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .handler-card {
+      transition: all 0.3s ease;
+    }
+    .handler-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .status-active {
+      background-color: #dcfce7;
+      color: #166534;
+    }
+    .status-inactive {
+      background-color: #fee2e2;
+      color: #991b1b;
+    }
+  </style>
+</head>
+<body class="bg-gray-50">
+  <div class="flex h-screen">
+    <!-- Sidebar -->
+    <div id="sidebar" class="w-64 bg-white border-r border-gray-200 overflow-y-auto transform -translate-x-full lg:translate-x-0 transition-transform duration-300 fixed lg:static h-full z-40">
+      <div class="p-6">
+        <h1 class="text-2xl font-bold text-gray-900">Num Agents</h1>
+      </div>
+      <nav class="space-y-2 px-4">
+        <a href="/catalog" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">📚 Catalog</a>
+        <a href="/custom-modes" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">⚙️ Custom Modes</a>
+        <a href="/agent-detail" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">👤 Agent Detail</a>
+        <a href="/editor" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">✏️ Editor</a>
+        <a href="/playground" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">🎮 Playground</a>
+        <a href="/scoring" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">📊 Scoring</a>
+        <a href="/gemini-handlers" class="block px-4 py-2 bg-blue-100 text-blue-700 rounded font-semibold">⚡ Gemini Handlers</a>
+        <a href="/flow-visualizer" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">🔄 Flow Visualizer</a>
+      </nav>
+    </div>
+
+    <!-- Overlay for mobile -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 lg:hidden hidden z-30" onclick="toggleSidebar()"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 overflow-auto">
+      <!-- Header -->
+      <div class="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div class="flex items-center justify-between p-6">
+          <div>
+            <h2 class="text-3xl font-bold text-gray-900">Gemini Handlers</h2>
+            <p class="text-gray-600 mt-1">Manage and monitor Gemini API handlers</p>
+          </div>
+          <button onclick="toggleSidebar()" class="lg:hidden p-2 hover:bg-gray-100 rounded">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="p-6">
+        <!-- API Key Configuration -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h3 class="text-xl font-semibold text-gray-900 mb-4">🔑 API Configuration</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Gemini API Key</label>
+              <div class="flex gap-2">
+                <input type="password" id="apiKey" placeholder="Enter your Gemini API key" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <button onclick="saveApiKey()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save</button>
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Default Model</label>
+              <select id="defaultModel" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <option>gemini-2.5-flash</option>
+                <option>gemini-2.5-pro</option>
+                <option>gemini-3-pro-preview</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Handlers Overview -->
+        <div class="mb-6">
+          <h3 class="text-xl font-semibold text-gray-900 mb-4">📊 Handlers Overview</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="handler-card bg-white rounded-lg shadow-md p-4">
+              <div class="flex items-center justify-between mb-2">
+                <h4 class="font-semibold text-gray-900">LLMHandler</h4>
+                <span class="status-badge status-active">Active</span>
+              </div>
+              <p class="text-sm text-gray-600 mb-3">Multi-provider LLM support</p>
+              <div class="text-xs text-gray-500">
+                <p>✅ Gemini, OpenAI, Anthropic</p>
+                <p>✅ Dynamic model selection</p>
+              </div>
+            </div>
+
+            <div class="handler-card bg-white rounded-lg shadow-md p-4">
+              <div class="flex items-center justify-between mb-2">
+                <h4 class="font-semibold text-gray-900">FunctionCallingHandler</h4>
+                <span class="status-badge status-active">Active</span>
+              </div>
+              <p class="text-sm text-gray-600 mb-3">Function calling orchestration</p>
+              <div class="text-xs text-gray-500">
+                <p>✅ Function registry</p>
+                <p>✅ Tool management</p>
+              </div>
+            </div>
+
+            <div class="handler-card bg-white rounded-lg shadow-md p-4">
+              <div class="flex items-center justify-between mb-2">
+                <h4 class="font-semibold text-gray-900">ComputerUseHandler</h4>
+                <span class="status-badge status-active">Active</span>
+              </div>
+              <p class="text-sm text-gray-600 mb-3">Browser automation & UI control</p>
+              <div class="text-xs text-gray-500">
+                <p>✅ Coordinate normalization</p>
+                <p>✅ Safety validation</p>
+              </div>
+            </div>
+
+            <div class="handler-card bg-white rounded-lg shadow-md p-4">
+              <div class="flex items-center justify-between mb-2">
+                <h4 class="font-semibold text-gray-900">BatchProcessingHandler</h4>
+                <span class="status-badge status-active">Active</span>
+              </div>
+              <p class="text-sm text-gray-600 mb-3">Async batch job management</p>
+              <div class="text-xs text-gray-500">
+                <p>✅ Job lifecycle management</p>
+                <p>✅ 50% cost reduction</p>
+              </div>
+            </div>
+
+            <div class="handler-card bg-white rounded-lg shadow-md p-4">
+              <div class="flex items-center justify-between mb-2">
+                <h4 class="font-semibold text-gray-900">CachingTokensHandler</h4>
+                <span class="status-badge status-active">Active</span>
+              </div>
+              <p class="text-sm text-gray-600 mb-3">Context caching & token management</p>
+              <div class="text-xs text-gray-500">
+                <p>✅ Implicit & explicit caching</p>
+                <p>✅ 90% cost reduction</p>
+              </div>
+            </div>
+
+            <div class="handler-card bg-white rounded-lg shadow-md p-4">
+              <div class="flex items-center justify-between mb-2">
+                <h4 class="font-semibold text-gray-900">LongContextHandler</h4>
+                <span class="status-badge status-active">Active</span>
+              </div>
+              <p class="text-sm text-gray-600 mb-3">1M+ token context support</p>
+              <div class="text-xs text-gray-500">
+                <p>✅ PDF, video, audio processing</p>
+                <p>✅ Token validation</p>
+              </div>
+            </div>
+
+            <div class="handler-card bg-white rounded-lg shadow-md p-4">
+              <div class="flex items-center justify-between mb-2">
+                <h4 class="font-semibold text-gray-900">EmbeddingsRAGHandler</h4>
+                <span class="status-badge status-active">Active</span>
+              </div>
+              <p class="text-sm text-gray-600 mb-3">Embeddings & RAG system</p>
+              <div class="text-xs text-gray-500">
+                <p>✅ Semantic search</p>
+                <p>✅ Document retrieval</p>
+              </div>
+            </div>
+
+            <div class="handler-card bg-white rounded-lg shadow-md p-4">
+              <div class="flex items-center justify-between mb-2">
+                <h4 class="font-semibold text-gray-900">DeepResearchAgentHandler</h4>
+                <span class="status-badge status-active">Active</span>
+              </div>
+              <p class="text-sm text-gray-600 mb-3">Autonomous multi-step research</p>
+              <div class="text-xs text-gray-500">
+                <p>✅ Background execution</p>
+                <p>✅ Streaming support</p>
+              </div>
+            </div>
+
+            <div class="handler-card bg-white rounded-lg shadow-md p-4">
+              <div class="flex items-center justify-between mb-2">
+                <h4 class="font-semibold text-gray-900">GeminiConfigManager</h4>
+                <span class="status-badge status-active">Active</span>
+              </div>
+              <p class="text-sm text-gray-600 mb-3">Configuration management</p>
+              <div class="text-xs text-gray-500">
+                <p>✅ Model management</p>
+                <p>✅ Cost calculation</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Handler Statistics -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h3 class="text-xl font-semibold text-gray-900 mb-4">📈 Statistics</h3>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="text-center">
+              <div class="text-3xl font-bold text-blue-600">9</div>
+              <div class="text-sm text-gray-600">Total Handlers</div>
+            </div>
+            <div class="text-center">
+              <div class="text-3xl font-bold text-green-600">9</div>
+              <div class="text-sm text-gray-600">Active</div>
+            </div>
+            <div class="text-center">
+              <div class="text-3xl font-bold text-purple-600">28</div>
+              <div class="text-sm text-gray-600">Agents</div>
+            </div>
+            <div class="text-center">
+              <div class="text-3xl font-bold text-orange-600">100%</div>
+              <div class="text-sm text-gray-600">Coverage</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      sidebar.classList.toggle('-translate-x-full');
+      overlay.classList.toggle('hidden');
+    }
+
+    function saveApiKey() {
+      const apiKey = document.getElementById('apiKey').value;
+      if (apiKey) {
+        localStorage.setItem('gemini_api_key', apiKey);
+        alert('API Key saved successfully');
+      }
+    }
+
+    // Load API key on page load
+    window.addEventListener('load', () => {
+      const savedKey = localStorage.getItem('gemini_api_key');
+      if (savedKey) {
+        document.getElementById('apiKey').value = savedKey;
+      }
+    });
+  </script>
+</body>
+</html>

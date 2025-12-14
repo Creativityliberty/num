@@ -1,0 +1,13 @@
+{
+  "id": "num-core",
+  "name": "Num Core Agents",
+  "description": "Official core agents for common development tasks",
+  "version": "1.0.0",
+  "tags": ["official", "core"],
+  "runtimePolicy": {
+    "budget": {
+      "maxCostUsd": 50
+    }
+  },
+  "enabled": true
+}

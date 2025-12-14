@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Custom Modes - Num Agents</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      line-height: 1.6;
+    }
+
+    .container {
+      display: flex;
+      height: 100vh;
+    }
+
+    .sidebar {
+      width: 250px;
+      background: #1e293b;
+      border-right: 1px solid #334155;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    .sidebar-item {
+      padding: 12px 16px;
+      margin-bottom: 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: block;
+      color: #cbd5e1;
+    }
+
+    .sidebar-item:hover {
+      background: #334155;
+      color: #f1f5f9;
+    }
+
+    .sidebar-item.active {
+      background: #3b82f6;
+      color: #fff;
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .header {
+      background: #1e293b;
+      border-bottom: 1px solid #334155;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 30px;
+    }
+
+    .modes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .mode-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 20px;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .mode-card:hover {
+      border-color: #3b82f6;
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+    }
+
+    .mode-card h3 {
+      font-size: 18px;
+      margin-bottom: 8px;
+      color: #f1f5f9;
+    }
+
+    .mode-card .category {
+      display: inline-block;
+      background: #334155;
+      color: #cbd5e1;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      margin-bottom: 12px;
+    }
+
+    .mode-card p {
+      color: #94a3b8;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+
+    .mode-stats {
+      display: flex;
+      gap: 12px;
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .stat {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .button:hover {
+      background: #2563eb;
+    }
+
+    .stats-section {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 30px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 20px;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #3b82f6;
+      margin-bottom: 8px;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: #94a3b8;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #94a3b8;
+    }
+
+    .error {
+      background: #7f1d1d;
+      border: 1px solid #dc2626;
+      color: #fca5a5;
+      padding: 16px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="sidebar">
+      <h2 style="margin-bottom: 20px; color: #f1f5f9">Navigation</h2>
+      <a href="/" class="sidebar-item">Dashboard</a>
+      <a href="/catalog" class="sidebar-item">Catalog</a>
+      <a href="/custom-modes" class="sidebar-item active">Custom Modes</a>
+      <a href="/agent-detail" class="sidebar-item">Agent Detail</a>
+      <a href="/editor" class="sidebar-item">Editor</a>
+      <a href="/playground" class="sidebar-item">Playground</a>
+      <a href="/scoring" class="sidebar-item">Scoring</a>
+      <a href="/model-health" class="sidebar-item">Model Health</a>
+      <a href="/gemini-handlers" class="sidebar-item">Gemini Handlers</a>
+      <a href="/flow-visualizer" class="sidebar-item">Flow Visualizer</a>
+    </div>
+
+    <div class="main">
+      <div class="header">
+        <h1>Custom Modes</h1>
+        <button class="button">+ New Mode</button>
+      </div>
+
+      <div class="content">
+        <div class="stats-section">
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-value" id="total-modes">24</div>
+              <div class="stat-label">Total Modes</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="total-categories">8</div>
+              <div class="stat-label">Categories</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="active-modes">24</div>
+              <div class="stat-label">Active</div>
+            </div>
+          </div>
+        </div>
+
+        <h2 style="margin-bottom: 20px; color: #f1f5f9">Available Modes</h2>
+        <div id="modes-container" class="modes-grid">
+          <div class="loading">Loading custom modes...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const customModes = [
+      { id: "research-analyst", name: "Research Analyst", category: "Analysis", description: "Specialized in research and data analysis" },
+      { id: "data-scientist", name: "Data Scientist", category: "Analysis", description: "Expert in data science and analytics" },
+      { id: "code-reviewer", name: "Code Reviewer", category: "Quality", description: "Reviews code quality and best practices" },
+      { id: "documentation-writer", name: "Documentation Writer", category: "Documentation", description: "Creates comprehensive documentation" },
+      { id: "security-auditor", name: "Security Auditor", category: "Security", description: "Audits security and compliance" },
+      { id: "performance-optimizer", name: "Performance Optimizer", category: "Optimization", description: "Optimizes system performance" },
+      { id: "api-designer", name: "API Designer", category: "Design", description: "Designs APIs and interfaces" },
+      { id: "database-architect", name: "Database Architect", category: "Architecture", description: "Designs database schemas" },
+      { id: "devops-engineer", name: "DevOps Engineer", category: "Infrastructure", description: "Manages DevOps infrastructure" },
+      { id: "qa-specialist", name: "QA Specialist", category: "Quality", description: "Quality assurance and testing" },
+      { id: "project-manager", name: "Project Manager", category: "Management", description: "Manages projects and timelines" },
+      { id: "business-analyst", name: "Business Analyst", category: "Analysis", description: "Analyzes business requirements" },
+      { id: "ux-designer", name: "UX Designer", category: "Design", description: "Designs user experiences" },
+      { id: "frontend-developer", name: "Frontend Developer", category: "Development", description: "Develops frontend applications" },
+      { id: "backend-developer", name: "Backend Developer", category: "Development", description: "Develops backend services" },
+      { id: "mobile-developer", name: "Mobile Developer", category: "Development", description: "Develops mobile applications" },
+      { id: "ml-engineer", name: "ML Engineer", category: "AI", description: "Develops machine learning models" },
+      { id: "data-engineer", name: "Data Engineer", category: "Data", description: "Builds data pipelines" },
+      { id: "cloud-architect", name: "Cloud Architect", category: "Architecture", description: "Designs cloud solutions" },
+      { id: "security-engineer", name: "Security Engineer", category: "Security", description: "Implements security solutions" },
+      { id: "sre-engineer", name: "SRE Engineer", category: "Infrastructure", description: "Site reliability engineering" },
+      { id: "technical-writer", name: "Technical Writer", category: "Documentation", description: "Writes technical content" },
+      { id: "solutions-architect", name: "Solutions Architect", category: "Architecture", description: "Designs solutions" },
+      { id: "product-manager", name: "Product Manager", category: "Management", description: "Manages product development" },
+    ];
+
+    function renderModes() {
+      const container = document.getElementById("modes-container");
+      container.innerHTML = customModes
+        .map(
+          (mode) => `
+        <div class="mode-card">
+          <h3>${mode.name}</h3>
+          <span class="category">${mode.category}</span>
+          <p>${mode.description}</p>
+          <div class="mode-stats">
+            <div class="stat">📋 ${mode.id}</div>
+          </div>
+          <button class="button" style="width: 100%; margin-top: 12px">View Details</button>
+        </div>
+      `
+        )
+        .join("");
+    }
+
+    function updateStats() {
+      const categories = new Set(customModes.map((m) => m.category));
+      document.getElementById("total-modes").textContent = customModes.length;
+      document.getElementById("total-categories").textContent = categories.size;
+      document.getElementById("active-modes").textContent = customModes.length;
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      renderModes();
+      updateStats();
+    });
+  </script>
+</body>
+</html>

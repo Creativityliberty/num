@@ -1,0 +1,51 @@
+{
+  "id": "test-generator",
+  "name": "Num Test Generator",
+  "description": "Generate unit tests for code",
+  "tags": ["test", "testing", "unit-test", "vitest", "jest"],
+  "runtimePolicy": {
+    "model": {
+      "preferred": { "provider": "openai", "model": "gpt-4.1" }
+    },
+    "budget": { "maxCostUsd": 4 }
+  },
+  "flow": {
+    "version": "1",
+    "nodes": [
+      {
+        "id": "plan",
+        "role": "planner",
+        "goal": "Analyze code and plan test coverage",
+        "expectedSchema": "multiPlan",
+        "prompt": {
+          "system": "You are a QA engineer. Analyze the code and identify all test cases needed for comprehensive coverage.",
+          "user": "Plan tests for:\n{{task.goal}}\n\nContext:\n{{task.context | json}}"
+        }
+      },
+      {
+        "id": "implement",
+        "role": "implementer",
+        "goal": "Write the test cases",
+        "expectedSchema": "patchCandidate",
+        "prompt": {
+          "system": "You are a QA engineer. Write comprehensive unit tests using the project's test framework.",
+          "user": "Write tests based on plan:\n{{artifacts.plan | json}}"
+        }
+      },
+      {
+        "id": "review",
+        "role": "reviewer",
+        "goal": "Review test quality and coverage",
+        "expectedSchema": "reviewReport",
+        "prompt": {
+          "system": "You are a QA lead. Review tests for coverage, edge cases, and best practices.",
+          "user": "Review these tests:\n{{artifacts.patchCandidate.patch}}"
+        }
+      }
+    ],
+    "edges": [
+      { "from": "plan", "to": "implement" },
+      { "from": "implement", "to": "review" }
+    ]
+  }
+}

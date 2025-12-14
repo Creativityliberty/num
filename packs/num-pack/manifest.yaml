@@ -1,0 +1,427 @@
+packId: num-pack
+importedAt: '2025-12-13T03:52:01.673Z'
+sourceType: customModesYaml
+inputPath: ./custom_modes.d
+stats:
+  total: 51
+  chefs: 7
+  stubs: 0
+  aliases: 1
+modes:
+  - id: num:sparc
+    name: SPARC Orchestrator
+    tags:
+      - read
+      - edit
+      - mcp
+      - needs-mcp
+      - chef
+    flow: 3 nodes
+    disabled: false
+  - id: num:workflow-orchestrator
+    name: Workflow Orchestrator
+    tags:
+      - read
+      - mcp
+      - needs-mcp
+      - chef
+    flow: 3 nodes
+    disabled: false
+  - id: num:agent-organizer
+    name: Agent Organizer
+    tags:
+      - read
+      - mcp
+      - needs-mcp
+      - chef
+    flow: 3 nodes
+    disabled: false
+  - id: num:error-coordinator
+    name: Error Coordinator
+    tags:
+      - read
+      - mcp
+      - needs-mcp
+      - chef
+    flow: 3 nodes
+    disabled: false
+  - id: num:performance-monitor
+    name: Performance Monitor
+    tags:
+      - read
+      - mcp
+      - needs-mcp
+      - chef
+    flow: 3 nodes
+    disabled: false
+  - id: num:knowledge-synthesizer
+    name: Knowledge Synthesizer
+    tags:
+      - read
+      - mcp
+      - needs-mcp
+      - chef
+    flow: 3 nodes
+    disabled: false
+  - id: num:docker-expert
+    name: Docker Expert
+    tags:
+      - read
+      - edit
+      - command
+      - needs-exec
+    flow: 4 nodes
+    disabled: false
+  - id: num:typescript-architect
+    name: TypeScript Architect
+    tags:
+      - read
+      - edit
+    flow: 1 nodes
+    disabled: false
+  - id: num:react-specialist
+    name: React Specialist
+    tags:
+      - read
+      - edit
+      - browser
+      - needs-browser
+    flow: 3 nodes
+    disabled: false
+  - id: num:api-designer
+    name: API Designer
+    tags:
+      - read
+      - edit
+    flow: 1 nodes
+    disabled: false
+  - id: num:database-expert
+    name: Database Expert
+    tags:
+      - read
+      - edit
+      - command
+      - needs-exec
+    flow: 4 nodes
+    disabled: false
+  - id: num:security-auditor
+    name: Security Auditor
+    tags:
+      - read
+    flow: 1 nodes
+    disabled: false
+  - id: num:test-engineer
+    name: Test Engineer
+    tags:
+      - read
+      - edit
+    flow: 1 nodes
+    disabled: false
+  - id: num:devops-engineer
+    name: DevOps Engineer
+    tags:
+      - read
+      - edit
+      - command
+      - needs-exec
+    flow: 4 nodes
+    disabled: false
+  - id: num:documentation-writer
+    name: Documentation Writer
+    tags:
+      - read
+      - edit
+    flow: 1 nodes
+    disabled: false
+  - id: num:code-reviewer
+    name: Code Reviewer
+    tags:
+      - read
+    flow: 1 nodes
+    disabled: false
+  - id: num:refactoring-expert
+    name: Refactoring Expert
+    tags:
+      - read
+      - edit
+    flow: 1 nodes
+    disabled: false
+  - id: num:python-developer
+    name: Python Developer
+    tags:
+      - read
+      - edit
+      - command
+      - needs-exec
+    flow: 4 nodes
+    disabled: false
+  - id: num:rust-developer
+    name: Rust Developer
+    tags:
+      - read
+      - edit
+      - command
+      - needs-exec
+    flow: 4 nodes
+    disabled: false
+  - id: num:go-developer
+    name: Go Developer
+    tags:
+      - read
+      - edit
+      - command
+      - needs-exec
+    flow: 4 nodes
+    disabled: false
+  - id: num:web-researcher
+    name: Web Researcher
+    tags:
+      - read
+      - browser
+      - needs-browser
+    flow: 3 nodes
+    disabled: false
+  - id: num:data-analyst
+    name: Data Analyst
+    tags:
+      - read
+      - edit
+      - command
+      - needs-exec
+    flow: 4 nodes
+    disabled: false
+  - id: num:ml-engineer
+    name: ML Engineer
+    tags:
+      - read
+      - edit
+      - command
+      - needs-exec
+    flow: 4 nodes
+    disabled: false
+  - id: num:prompt-engineer
+    name: Prompt Engineer
+    tags:
+      - read
+      - edit
+    flow: 1 nodes
+    disabled: false
+  - id: num:git-expert
+    name: Git Expert
+    tags:
+      - read
+      - command
+      - needs-exec
+    flow: 4 nodes
+    disabled: false
+  - id: num:linux-admin
+    name: Linux Administrator
+    tags:
+      - read
+      - command
+      - needs-exec
+    flow: 4 nodes
+    disabled: false
+  - id: num:aws-architect
+    name: AWS Architect
+    tags:
+      - read
+      - edit
+      - command
+      - needs-exec
+    flow: 4 nodes
+    disabled: false
+  - id: num:kubernetes-expert
+    name: Kubernetes Expert
+    tags:
+      - read
+      - edit
+      - command
+      - needs-exec
+    flow: 4 nodes
+    disabled: false
+  - id: num:graphql-specialist
+    name: GraphQL Specialist
+    tags:
+      - read
+      - edit
+    flow: 1 nodes
+    disabled: false
+  - id: num:nextjs-developer
+    name: Next.js Developer
+    tags:
+      - read
+      - edit
+      - browser
+      - needs-browser
+    flow: 3 nodes
+    disabled: false
+  - id: num:tailwind-designer
+    name: Tailwind Designer
+    tags:
+      - read
+      - edit
+    flow: 1 nodes
+    disabled: false
+  - id: num:accessibility-expert
+    name: Accessibility Expert
+    tags:
+      - read
+      - edit
+      - browser
+      - needs-browser
+    flow: 3 nodes
+    disabled: false
+  - id: num:performance-optimizer
+    name: Performance Optimizer
+    tags:
+      - read
+      - edit
+      - browser
+      - needs-browser
+    flow: 3 nodes
+    disabled: false
+  - id: num:monorepo-architect
+    name: Monorepo Architect
+    tags:
+      - read
+      - edit
+      - command
+      - needs-exec
+    flow: 4 nodes
+    disabled: false
+  - id: num:regex-master
+    name: Regex Master
+    tags:
+      - read
+      - edit
+    flow: 1 nodes
+    disabled: false
+  - id: num:shell-scripter
+    name: Shell Scripter
+    tags:
+      - read
+      - edit
+      - command
+      - needs-exec
+    flow: 4 nodes
+    disabled: false
+  - id: num:json-yaml-expert
+    name: JSON/YAML Expert
+    tags:
+      - read
+      - edit
+    flow: 1 nodes
+    disabled: false
+  - id: num:websocket-specialist
+    name: WebSocket Specialist
+    tags:
+      - read
+      - edit
+    flow: 1 nodes
+    disabled: false
+  - id: num:oauth-expert
+    name: OAuth Expert
+    tags:
+      - read
+      - edit
+    flow: 1 nodes
+    disabled: false
+  - id: num:caching-specialist
+    name: Caching Specialist
+    tags:
+      - read
+      - edit
+    flow: 1 nodes
+    disabled: false
+  - id: num:logging-expert
+    name: Logging Expert
+    tags:
+      - read
+      - edit
+    flow: 1 nodes
+    disabled: false
+  - id: num:error-handler
+    name: Error Handler
+    tags:
+      - read
+      - edit
+    flow: 1 nodes
+    disabled: false
+  - id: num:migration-specialist
+    name: Migration Specialist
+    tags:
+      - read
+      - edit
+      - command
+      - needs-exec
+    flow: 4 nodes
+    disabled: false
+  - id: num:debugging-expert
+    name: Debugging Expert
+    tags:
+      - read
+      - edit
+    flow: 1 nodes
+    disabled: false
+  - id: num:code-generator
+    name: Code Generator
+    tags:
+      - read
+      - edit
+    flow: 1 nodes
+    disabled: false
+  - id: num:dependency-manager
+    name: Dependency Manager
+    tags:
+      - read
+      - edit
+      - command
+      - needs-exec
+    flow: 4 nodes
+    disabled: false
+  - id: num:env-config-expert
+    name: Environment Config Expert
+    tags:
+      - read
+      - edit
+    flow: 1 nodes
+    disabled: false
+  - id: num:markdown-formatter
+    name: Markdown Formatter
+    tags:
+      - read
+      - edit
+    flow: 1 nodes
+    disabled: false
+  - id: num:changelog-writer
+    name: Changelog Writer
+    tags:
+      - read
+      - edit
+    flow: 1 nodes
+    disabled: false
+  - id: num:release-manager
+    name: Release Manager
+    tags:
+      - read
+      - edit
+      - command
+      - needs-exec
+    flow: 4 nodes
+    disabled: false
+  - id: num:orchestrator
+    name: Orchestrator
+    tags:
+      - read
+      - edit
+      - mcp
+      - needs-mcp
+      - chef
+      - alias
+    flow: 3 nodes
+    disabled: false
+warnings:
+  - kind: ALIAS_CREATED
+    message: Created chef alias num:orchestrator from num:sparc
+    ref: num:sparc

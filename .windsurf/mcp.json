@@ -1,0 +1,63 @@
+{
+  "mcpServers": {
+    "num-agents": {
+      "command": "node",
+      "args": [
+        "dist/src/cli.js",
+        "serve",
+        "--modes-path",
+        "./custom_modes.d",
+        "--dashboard",
+        "--dashboard-port",
+        "3457"
+      ],
+      "cwd": ".",
+      "env": {
+        "LOG_LEVEL": "info",
+        "GEMINI_API_KEY": "${GEMINI_API_KEY}"
+      }
+    }
+  },
+  "apiEndpoints": {
+    "dashboard": "http://127.0.0.1:3457",
+    "catalog": "http://127.0.0.1:3457/api/catalog",
+    "customModes": "http://127.0.0.1:3457/api/custom-modes",
+    "mcpTools": "http://127.0.0.1:3457/api/mcp/tools",
+    "agentDetail": "http://127.0.0.1:3457/api/catalog/mode/:id",
+    "packops": "http://127.0.0.1:3457/api/packops/validate-simulate-all",
+    "geminiHandlers": "http://127.0.0.1:3457/api/gemini/handlers",
+    "geminiConfig": "http://127.0.0.1:3457/api/gemini/config",
+    "geminiTest": "http://127.0.0.1:3457/api/gemini/test",
+    "pages": {
+      "geminiHandlers": "http://127.0.0.1:3457/gemini-handlers",
+      "flowVisualizer": "http://127.0.0.1:3457/flow-visualizer",
+      "handlerSelector": "http://127.0.0.1:3457/api/components/handler-selector"
+    }
+  },
+  "agents": {
+    "totalCount": 75,
+    "catalogAgents": 51,
+    "customModes": 24,
+    "tools": 14,
+    "pages": 7
+  },
+  "geminiHandlers": {
+    "llm": "LLMHandler",
+    "functionCalling": "FunctionCallingHandler",
+    "computerUse": "ComputerUseHandler",
+    "batchProcessing": "BatchProcessingHandler",
+    "cachingTokens": "CachingTokensHandler",
+    "longContext": "LongContextHandler",
+    "embeddingsRag": "EmbeddingsRAGHandler",
+    "deepResearch": "DeepResearchAgentHandler",
+    "config": "GeminiConfigManager"
+  },
+  "flowIntegration": {
+    "enabled": true,
+    "handlers": 9,
+    "agents": 28,
+    "coverage": "100%",
+    "testEndpoint": "http://127.0.0.1:3457/api/flow/test",
+    "statusEndpoint": "http://127.0.0.1:3457/api/flow/status"
+  }
+}

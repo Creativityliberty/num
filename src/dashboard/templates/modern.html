@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>MCP Agent Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#059669",
+            "primary-hover": "#047857",
+            "accent": "#34D399",
+            "background-light": "#F8FAFC",
+            "surface-light": "#FFFFFF",
+            "surface-subtle": "#F1F5F9",
+            "border-light": "#E2E8F0",
+            "text-main": "#0F172A",
+            "text-subtle": "#64748B",
+          },
+          fontFamily: {
+            "display": ["Inter", "sans-serif"],
+            "mono": ["JetBrains Mono", "monospace"],
+          },
+          boxShadow: {
+            'soft': '0 2px 10px -2px rgba(0, 0, 0, 0.03)',
+            'card': '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.02)',
+            'glow': '0 0 15px rgba(5, 150, 105, 0.15)'
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; vertical-align: text-bottom; }
+    .icon-filled { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+  </style>
+</head>
+<body class="bg-background-light text-text-main font-display antialiased min-h-screen flex flex-col">
+
+<!-- Header -->
+<header class="sticky top-0 z-50 w-full bg-surface-light/80 backdrop-blur-xl border-b border-border-light shadow-sm">
+  <div class="px-6 py-3.5 flex items-center justify-between w-full">
+    <div class="flex items-center gap-4">
+      <button onclick="toggleSidebar()" class="p-2 hover:bg-surface-subtle rounded-lg transition-all lg:hidden">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+      <div class="size-9 rounded-xl bg-gradient-to-br from-primary to-emerald-700 flex items-center justify-center text-white shadow-lg shadow-primary/25">
+        <span class="material-symbols-outlined text-[20px]">hub</span>
+      </div>
+      <div>
+        <h1 class="text-lg font-bold tracking-tight text-text-main leading-tight">MCP Agent Dashboard</h1>
+        <p class="text-[11px] font-medium text-text-subtle hidden sm:block">Num Agents v2.0</p>
+      </div>
+      <div id="statusBadge" class="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-50 border border-yellow-100/60 ml-2">
+        <div class="size-2 rounded-full bg-yellow-500 animate-pulse"></div>
+        <span class="text-[11px] font-bold text-yellow-700 uppercase tracking-wider">Connecting</span>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <div class="hidden sm:flex flex-col items-end mr-6 border-r border-border-light pr-6">
+        <span class="text-[10px] text-text-subtle font-bold uppercase tracking-wider">Events</span>
+        <span id="eventCount" class="text-base font-bold font-mono text-primary">0</span>
+      </div>
+      <button onclick="loadRuns()" class="flex items-center justify-center size-9 rounded-full bg-white border border-border-light text-text-subtle hover:text-text-main hover:border-gray-300 hover:shadow-sm transition-all group">
+        <span class="material-symbols-outlined text-[18px] group-hover:rotate-180 transition-transform">refresh</span>
+      </button>
+      <button class="flex items-center justify-center size-9 rounded-full bg-white border border-border-light text-text-subtle hover:text-text-main hover:border-gray-300 hover:shadow-sm transition-all group">
+        <span class="material-symbols-outlined text-[18px] group-hover:rotate-45 transition-transform">settings</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- Sidebar + Main -->
+<div class="flex flex-1 overflow-hidden">
+  <!-- Sidebar -->
+  <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 w-64 bg-surface-light border-r border-border-light overflow-y-auto z-40 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+    <nav class="p-4 space-y-2">
+      <a href="/" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-primary bg-primary/5 rounded-lg transition-all">
+        <span class="material-symbols-outlined text-[20px]">dashboard</span>
+        Dashboard
+      </a>
+      <a href="/catalog" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-text-subtle hover:text-text-main hover:bg-surface-subtle rounded-lg transition-all">
+        <span class="material-symbols-outlined text-[20px]">list</span>
+        Catalog
+      </a>
+      <a href="/packs" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-text-subtle hover:text-text-main hover:bg-surface-subtle rounded-lg transition-all">
+        <span class="material-symbols-outlined text-[20px]">inventory_2</span>
+        Packs
+      </a>
+      <a href="/agent-detail" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-text-subtle hover:text-text-main hover:bg-surface-subtle rounded-lg transition-all">
+        <span class="material-symbols-outlined text-[20px]">info</span>
+        Agent Detail
+      </a>
+      <a href="/editor" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-text-subtle hover:text-text-main hover:bg-surface-subtle rounded-lg transition-all">
+        <span class="material-symbols-outlined text-[20px]">edit</span>
+        Editor
+      </a>
+      <a href="/playground" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-text-subtle hover:text-text-main hover:bg-surface-subtle rounded-lg transition-all">
+        <span class="material-symbols-outlined text-[20px]">play_arrow</span>
+        Playground
+      </a>
+      <a href="/scoring" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-text-subtle hover:text-text-main hover:bg-surface-subtle rounded-lg transition-all">
+        <span class="material-symbols-outlined text-[20px]">grade</span>
+        Scoring
+      </a>
+      <a href="/model-health" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-text-subtle hover:text-text-main hover:bg-surface-subtle rounded-lg transition-all">
+        <span class="material-symbols-outlined text-[20px]">monitor_heart</span>
+        Model Health
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Overlay for mobile -->
+  <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-30 hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+  <!-- Main Content -->
+  <main class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 space-y-8">
+
+  <!-- Events Live Section -->
+  <section class="flex flex-col gap-5">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+      <div>
+        <h2 class="text-2xl font-bold tracking-tight text-text-main">Events Live</h2>
+        <p class="text-sm font-medium text-text-subtle mt-1">Real-time stream of agent activities</p>
+      </div>
+      <div class="flex flex-wrap gap-3">
+        <div class="relative group">
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+            <span class="material-symbols-outlined text-text-subtle text-[18px]">search</span>
+          </div>
+          <input id="searchInput" class="block w-full sm:w-64 pl-10 pr-4 py-2 border border-border-light rounded-xl bg-white text-sm font-medium placeholder-text-subtle/80 focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary shadow-sm transition-all" placeholder="Search events..." type="text" oninput="renderEvents()"/>
+        </div>
+        <select id="sessionFilter" onchange="renderEvents()" class="px-4 py-2 bg-white border border-border-light rounded-xl text-sm font-semibold text-text-subtle hover:text-text-main hover:border-gray-300 hover:shadow-sm transition-all">
+          <option value="">All Sessions</option>
+        </select>
+        <select id="toolFilter" onchange="renderEvents()" class="px-4 py-2 bg-white border border-border-light rounded-xl text-sm font-semibold text-text-subtle hover:text-text-main hover:border-gray-300 hover:shadow-sm transition-all">
+          <option value="">All Tools</option>
+          <option value="modes.list">modes.list</option>
+          <option value="modes.get">modes.get</option>
+          <option value="modes.suggest">modes.suggest</option>
+          <option value="modes.render">modes.render</option>
+          <option value="modes.plan">modes.plan</option>
+          <option value="modes.planPrompt">modes.planPrompt</option>
+          <option value="modes.runPrompt">modes.runPrompt</option>
+          <option value="modes.reviewPrompt">modes.reviewPrompt</option>
+          <option value="workspace.applyPatch">workspace.applyPatch</option>
+          <option value="exec.run">exec.run</option>
+          <option value="git.status">git.status</option>
+          <option value="git.diff">git.diff</option>
+          <option value="git.log">git.log</option>
+          <option value="git.branch.create">git.branch.create</option>
+          <option value="git.commit">git.commit</option>
+          <option value="pipeline.applyAndVerify">pipeline.applyAndVerify</option>
+          <option value="bundle.pr.create">bundle.pr.create</option>
+          <option value="orchestrate.run">orchestrate.run</option>
+          <option value="orchestrate.continue">orchestrate.continue</option>
+          <option value="orchestrate.status">orchestrate.status</option>
+          <option value="orchestrate.cancel">orchestrate.cancel</option>
+          <option value="pack.import.external">pack.import.external</option>
+        </select>
+        <select id="typeFilter" onchange="renderEvents()" class="px-4 py-2 bg-emerald-50 border border-emerald-100 rounded-xl text-sm font-semibold text-emerald-700 hover:bg-emerald-100 transition-all shadow-sm">
+          <option value="">All Types</option>
+          <option value="tool.called">tool.called</option>
+          <option value="tool.succeeded">tool.succeeded</option>
+          <option value="tool.failed">tool.failed</option>
+          <option value="rollback">rollback</option>
+        </select>
+        <button onclick="clearEvents()" class="px-4 py-2 bg-white border border-border-light rounded-xl text-sm font-semibold text-text-subtle hover:text-red-600 hover:border-red-200 transition-all">Clear</button>
+      </div>
+    </div>
+    <div class="bg-surface-light rounded-2xl shadow-card border border-border-light overflow-hidden">
+      <div class="overflow-x-auto max-h-80">
+        <table class="w-full text-left border-collapse">
+          <thead class="sticky top-0">
+            <tr class="bg-surface-subtle/50 border-b border-border-light">
+              <th class="py-3 px-6 text-[11px] font-bold uppercase text-text-subtle tracking-wider w-24">Time</th>
+              <th class="py-3 px-6 text-[11px] font-bold uppercase text-text-subtle tracking-wider w-24">Session</th>
+              <th class="py-3 px-6 text-[11px] font-bold uppercase text-text-subtle tracking-wider w-32">Tool</th>
+              <th class="py-3 px-6 text-[11px] font-bold uppercase text-text-subtle tracking-wider w-28">Event</th>
+              <th class="py-3 px-6 text-[11px] font-bold uppercase text-text-subtle tracking-wider">Details</th>
+            </tr>
+          </thead>
+          <tbody id="eventsBody" class="divide-y divide-border-light text-sm"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Runs + Details Grid -->
+  <section class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    <!-- Runs List -->
+    <div class="lg:col-span-4 flex flex-col gap-5">
+      <div class="flex items-center justify-between px-1">
+        <h2 class="text-xl font-bold tracking-tight text-text-main">Recent Runs</h2>
+        <button onclick="loadRuns()" class="text-[11px] font-bold text-primary hover:text-primary-hover bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-full transition-colors border border-emerald-100/50">Refresh</button>
+      </div>
+      <div id="runsList" class="flex flex-col gap-4">
+        <div class="text-text-subtle text-sm p-4 bg-white rounded-2xl shadow-card border border-border-light">Loading runs...</div>
+      </div>
+    </div>
+
+    <!-- Run Details -->
+    <div class="lg:col-span-8 flex flex-col gap-4">
+      <div id="runDetails" class="bg-surface-light rounded-2xl shadow-card border border-border-light overflow-hidden flex-1">
+        <div class="px-8 py-12 text-center text-text-subtle">
+          <span class="material-symbols-outlined text-4xl mb-2 opacity-30">folder_open</span>
+          <p class="font-medium">Select a run to view details</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Modes Registry + Packs -->
+  <section class="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-8">
+    <!-- Modes Registry -->
+    <div class="lg:col-span-2 flex flex-col gap-5">
+      <div class="flex items-center justify-between px-1">
+        <h2 class="text-xl font-bold tracking-tight text-text-main">Modes Registry</h2>
+        <button onclick="loadModes()" class="flex items-center gap-2 text-sm font-bold text-white bg-primary hover:bg-primary-hover px-4 py-2 rounded-xl shadow-md shadow-emerald-500/20 transition-all hover:scale-105">
+          <span class="material-symbols-outlined text-[18px]">refresh</span> Refresh
+        </button>
+      </div>
+      <div class="bg-surface-light rounded-2xl shadow-card border border-border-light overflow-hidden flex flex-col">
+        <div class="p-4 border-b border-border-light bg-surface-subtle/30">
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-3.5 top-2.5 text-text-subtle text-[18px]">search</span>
+            <input id="modesSearch" class="w-full pl-10 pr-4 py-2 bg-white border border-border-light focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-xl text-sm outline-none transition-all shadow-sm placeholder-text-subtle/80 font-medium" placeholder="Find mode..." type="text" oninput="filterModes()"/>
+          </div>
+        </div>
+        <div class="overflow-x-auto max-h-64">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 border-b border-border-light sticky top-0">
+              <tr>
+                <th class="px-6 py-3 font-bold text-text-subtle uppercase text-[11px] tracking-wider">ID</th>
+                <th class="px-6 py-3 font-bold text-text-subtle uppercase text-[11px] tracking-wider">Name</th>
+                <th class="px-6 py-3 font-bold text-text-subtle uppercase text-[11px] tracking-wider">Nodes</th>
+                <th class="px-6 py-3 font-bold text-text-subtle uppercase text-[11px] tracking-wider">Status</th>
+                <th class="px-6 py-3 font-bold text-text-subtle uppercase text-[11px] tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="modesBody" class="divide-y divide-border-light"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Installed Packs -->
+    <div class="lg:col-span-1 flex flex-col gap-5">
+      <div class="flex items-center justify-between px-1">
+        <h2 class="text-xl font-bold tracking-tight text-text-main">Installed Packs</h2>
+        <button onclick="loadPacks()" class="text-xs font-bold text-text-subtle hover:text-primary bg-white border border-border-light px-3 py-1.5 rounded-lg shadow-sm hover:border-emerald-200 transition-colors">Refresh</button>
+      </div>
+      <div id="packsList" class="grid grid-cols-1 gap-4">
+        <div class="text-text-subtle text-sm p-4 bg-white rounded-2xl shadow-card border border-border-light">Loading packs...</div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  // State
+  let events = [];
+  let runs = [];
+  let modes = [];
+  let packs = [];
+  let currentRunId = null;
+
+  // WebSocket connection
+  function connect() {
+    const proto = location.protocol === "https:" ? "wss" : "ws";
+    const ws = new WebSocket(proto + "://" + location.host + "/ws");
+
+    ws.onopen = () => {
+      document.getElementById("statusBadge").innerHTML = `
+        <div class="size-2 rounded-full bg-emerald-500 animate-pulse shadow-glow"></div>
+        <span class="text-[11px] font-bold text-emerald-700 uppercase tracking-wider">Connected</span>
+      `;
+      document.getElementById("statusBadge").className = "hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100/60 ml-2";
+    };
+
+    ws.onclose = () => {
+      document.getElementById("statusBadge").innerHTML = `
+        <div class="size-2 rounded-full bg-red-500"></div>
+        <span class="text-[11px] font-bold text-red-700 uppercase tracking-wider">Disconnected</span>
+      `;
+      document.getElementById("statusBadge").className = "hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-red-50 border border-red-100/60 ml-2";
+      setTimeout(connect, 1000);
+    };
+
+    ws.onmessage = (msg) => {
+      try {
+        const payload = JSON.parse(msg.data);
+        if (payload.type === "snapshot") {
+          events = payload.events || [];
+        } else if (payload.type === "event") {
+          events.push(payload.event);
+        }
+        renderEvents();
+      } catch {}
+    };
+  }
+
+  // Rebuild session options
+  function rebuildSessionOptions() {
+    const sessions = [...new Set(events.map(e => e.sessionId).filter(Boolean))];
+    const cur = document.getElementById("sessionFilter").value || "";
+    document.getElementById("sessionFilter").innerHTML =
+      '<option value="">All Sessions</option>' +
+      sessions.map(s => '<option value="' + s + '">' + s.slice(0, 8) + '</option>').join("");
+    if (cur) document.getElementById("sessionFilter").value = cur;
+  }
+
+  // Render events table
+  function renderEvents() {
+    rebuildSessionOptions();
+    const search = document.getElementById("searchInput").value.toLowerCase();
+    const sessionFilter = document.getElementById("sessionFilter").value;
+    const toolFilter = document.getElementById("toolFilter").value;
+    const typeFilter = document.getElementById("typeFilter").value;
+
+    const filtered = events.filter(ev => {
+      if (sessionFilter && ev.sessionId !== sessionFilter) return false;
+      if (toolFilter && ev.data?.tool !== toolFilter) return false;
+      if (typeFilter) {
+        if (typeFilter === "rollback") {
+          if (ev.type !== "rollback") return false;
+        } else if (ev.name !== typeFilter && ev.type !== typeFilter) {
+          return false;
+        }
+      }
+      if (search && !JSON.stringify(ev).toLowerCase().includes(search)) return false;
+      return true;
+    }).slice(-100).reverse();
+
+    document.getElementById("eventCount").textContent = events.length.toLocaleString();
+
+    const tbody = document.getElementById("eventsBody");
+    tbody.innerHTML = filtered.map(ev => {
+      const t = new Date(ev.ts).toLocaleTimeString();
+      const tool = ev.data?.tool || "";
+      const name = ev.name || ev.type || "";
+      const sid = (ev.sessionId || "").slice(0, 8);
+      const cls = name === "tool.failed" ? "text-red-600" : name === "tool.succeeded" ? "text-emerald-600" : "text-text-subtle";
+      const badge = name === "tool.failed"
+        ? '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 text-red-700 border border-red-100 text-[11px] font-bold uppercase tracking-wide">Failed</span>'
+        : name === "tool.succeeded"
+        ? '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 text-[11px] font-bold uppercase tracking-wide">Success</span>'
+        : '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-100 text-[11px] font-bold uppercase tracking-wide">Called</span>';
+
+      return `<tr class="group hover:bg-slate-50 transition-colors">
+        <td class="py-3.5 px-6 font-mono text-text-subtle font-medium text-xs">${t}</td>
+        <td class="py-3.5 px-6"><span class="inline-flex items-center px-2 py-0.5 rounded-md bg-white border border-border-light font-mono text-xs font-semibold text-text-main shadow-sm">${sid}</span></td>
+        <td class="py-3.5 px-6 font-medium text-text-main">${escapeHtml(tool)}</td>
+        <td class="py-3.5 px-6">${badge}</td>
+        <td class="py-3.5 px-6"><div class="font-mono text-text-subtle truncate max-w-xs bg-slate-50 px-2 py-1 rounded text-xs border border-slate-100">${escapeHtml(JSON.stringify(ev.data || {}).slice(0, 100))}</div></td>
+      </tr>`;
+    }).join("");
+  }
+
+  function clearEvents() {
+    events = [];
+    renderEvents();
+  }
+
+  // Load runs
+  async function loadRuns() {
+    try {
+      const res = await fetch("/api/runs");
+      const data = await res.json();
+      runs = data.runs || [];
+      renderRuns();
+    } catch (e) {
+      document.getElementById("runsList").innerHTML = '<div class="text-red-500 text-sm p-4 bg-white rounded-2xl shadow-card border border-red-200">Error loading runs</div>';
+    }
+  }
+
+  function renderRuns() {
+    const container = document.getElementById("runsList");
+    if (!runs.length) {
+      container.innerHTML = '<div class="text-text-subtle text-sm p-4 bg-white rounded-2xl shadow-card border border-border-light">No runs yet</div>';
+      return;
+    }
+    container.innerHTML = runs.slice(0, 10).map(r => {
+      const isSelected = r.runId === currentRunId;
+      const statusColor = r.state === "DONE" ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+        : r.state === "FAILED" ? "bg-red-50 text-red-600 border-red-100"
+        : "bg-blue-50 text-blue-600 border-blue-100";
+      const borderClass = isSelected ? "border-primary/30 ring-1 ring-primary/5" : "border-transparent hover:border-border-light";
+      return `<div onclick="loadRunDetails('${r.runId}')" class="group relative bg-white p-5 rounded-2xl shadow-card border ${borderClass} cursor-pointer transition-all hover:-translate-y-0.5">
+        ${isSelected ? '<div class="absolute left-0 top-6 bottom-6 w-1 bg-primary rounded-r-full"></div>' : ''}
+        <div class="flex justify-between items-start mb-3">
+          <div class="flex items-center gap-3 ${isSelected ? 'pl-2' : ''}">
+            <span class="font-mono text-[11px] font-bold text-text-subtle bg-slate-100 px-2 py-0.5 rounded border border-slate-200">${r.runId.slice(0,8)}</span>
+            <span class="text-base font-bold text-text-main">${escapeHtml(r.modeId || 'Unknown')}</span>
+          </div>
+          <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide ${statusColor}">${r.state}</span>
+        </div>
+        <div class="flex justify-between items-center text-xs text-text-subtle font-medium ${isSelected ? 'pl-2' : ''}">
+          <span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px]">schedule</span> ${new Date(r.createdAt || Date.now()).toLocaleTimeString()}</span>
+        </div>
+      </div>`;
+    }).join("");
+  }
+
+  // Load run details
+  async function loadRunDetails(runId) {
+    currentRunId = runId;
+    renderRuns();
+    try {
+      const res = await fetch("/api/runs/" + encodeURIComponent(runId));
+      const data = await res.json();
+      const run = data.run;
+      renderRunDetails(run, data);
+    } catch (e) {
+      document.getElementById("runDetails").innerHTML = '<div class="p-8 text-red-500">Error loading run details</div>';
+    }
+  }
+
+  function renderRunDetails(run, data) {
+    const jobs = run.agents?.jobs || [];
+    const telemetry = Array.isArray(run.telemetry) ? run.telemetry : [];
+    const fallbackCount = telemetry.filter(t => (t.attempts || []).length > 1).length;
+    const totalTokens = telemetry.reduce((sum, t) => sum + ((t.usage?.inputTokens || 0) + (t.usage?.outputTokens || 0)), 0);
+
+    const jobsHtml = jobs.length ? jobs.map(j => {
+      const dur = (j.startedAt && j.finishedAt) ? (new Date(j.finishedAt).getTime() - new Date(j.startedAt).getTime()) + "ms" : "-";
+      const statusColor = j.status === "done" ? "bg-emerald-50 text-emerald-700" : j.status === "failed" ? "bg-red-50 text-red-600" : "bg-blue-50 text-blue-600";
+      return `<tr class="hover:bg-slate-50">
+        <td class="py-2 px-4 font-mono text-xs">${escapeHtml(j.jobId)}</td>
+        <td class="py-2 px-4">${escapeHtml(j.role)}</td>
+        <td class="py-2 px-4"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${statusColor}">${j.status || 'pending'}</span></td>
+        <td class="py-2 px-4 font-mono text-xs">${dur}</td>
+      </tr>`;
+    }).join("") : '<tr><td colspan="4" class="py-4 px-4 text-text-subtle text-center">No jobs</td></tr>';
+
+    const telemetryHtml = telemetry.length ? telemetry.slice(-10).reverse().map(t => {
+      const who = t.jobId ? 'job:' + t.jobId.slice(0,6) : t.stepId ? 'step:' + t.stepId : '-';
+      const chosen = t.chosenModel ? t.chosenModel.provider + ':' + t.chosenModel.model : '-';
+      const attempts = (t.attempts || []).length;
+      const fallback = attempts > 1 ? '<span class="text-orange-500 font-bold">YES</span>' : 'no';
+      const tokens = t.usage ? (t.usage.inputTokens || 0) + '/' + (t.usage.outputTokens || 0) : '-';
+      return `<tr class="hover:bg-slate-50 text-xs">
+        <td class="py-2 px-3">${new Date(t.ts).toLocaleTimeString()}</td>
+        <td class="py-2 px-3 font-mono">${escapeHtml(who)}</td>
+        <td class="py-2 px-3">${escapeHtml(t.role || '-')}</td>
+        <td class="py-2 px-3 font-mono text-[10px]">${escapeHtml(chosen)}</td>
+        <td class="py-2 px-3">${attempts}</td>
+        <td class="py-2 px-3">${fallback}</td>
+        <td class="py-2 px-3 font-mono">${tokens}</td>
+      </tr>`;
+    }).join("") : '<tr><td colspan="7" class="py-4 px-3 text-text-subtle text-center">No telemetry</td></tr>';
+
+    document.getElementById("runDetails").innerHTML = `
+      <div class="px-8 py-6 border-b border-border-light flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 bg-white/50">
+        <div>
+          <div class="flex items-center gap-3">
+            <h3 class="text-xl font-bold text-text-main">Run ${run.runId.slice(0,8)}</h3>
+            <span class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase ${run.state === 'DONE' ? 'bg-emerald-50 text-emerald-700' : run.state === 'FAILED' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}">${run.state}</span>
+          </div>
+          <p class="text-sm text-text-subtle mt-1 font-medium">Mode: <span class="text-primary font-bold">${escapeHtml(run.selectedMode?.id || '-')}</span></p>
+        </div>
+        <div class="flex gap-3">
+          <button onclick="exportRun('${run.runId}')" class="flex items-center gap-2 px-4 py-2 rounded-xl border border-border-light bg-white text-sm font-semibold text-text-main hover:bg-slate-50 hover:border-gray-300 transition-all shadow-sm">
+            <span class="material-symbols-outlined text-[18px] text-text-subtle">download</span> Export
+          </button>
+          <button onclick="replayDryRun('${run.runId}')" class="flex items-center gap-2 px-4 py-2 rounded-xl border border-blue-200 bg-blue-50 text-sm font-semibold text-blue-600 hover:bg-blue-100 transition-all shadow-sm">
+            <span class="material-symbols-outlined text-[18px]">replay</span> Replay
+          </button>
+          ${data.rollbackAvailable && !data.rollbackInCooldown ? `<button onclick="rollbackRun('${run.runId}')" class="flex items-center gap-2 px-4 py-2 rounded-xl border border-red-200 bg-red-50 text-sm font-semibold text-red-600 hover:bg-red-100 transition-all shadow-sm">
+            <span class="material-symbols-outlined text-[18px]">undo</span> Rollback
+          </button>` : data.rollbackInCooldown ? `<button disabled class="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 bg-gray-100 text-sm font-semibold text-gray-400 cursor-not-allowed">
+            <span class="material-symbols-outlined text-[18px]">hourglass_top</span> Cooldown
+          </button>` : ''}
+        </div>
+      </div>
+
+      <div class="flex border-b border-border-light px-8 space-x-8 bg-white/50">
+        <button class="py-4 text-sm font-bold border-b-2 border-primary text-primary">Telemetry</button>
+        <button class="py-4 text-sm font-medium border-b-2 border-transparent text-text-subtle">Jobs <span class="ml-1.5 bg-slate-100 px-2 py-0.5 rounded-full text-[10px] font-bold text-text-subtle border border-slate-200">${jobs.length}</span></button>
+      </div>
+
+      <div class="p-8 bg-surface-light">
+        <!-- Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div class="p-5 bg-surface-subtle/50 rounded-xl border border-border-light">
+            <div class="flex justify-between items-end">
+              <span class="text-sm font-semibold text-text-subtle flex items-center gap-2">
+                <span class="material-symbols-outlined text-[18px]">checklist</span> Steps
+              </span>
+              <span class="text-lg font-bold font-mono text-text-main">${telemetry.length}</span>
+            </div>
+          </div>
+          <div class="p-5 bg-surface-subtle/50 rounded-xl border border-border-light">
+            <div class="flex justify-between items-end">
+              <span class="text-sm font-semibold text-text-subtle flex items-center gap-2">
+                <span class="material-symbols-outlined text-[18px]">sync_problem</span> Fallbacks
+              </span>
+              <span class="text-lg font-bold font-mono ${fallbackCount > 0 ? 'text-orange-500' : 'text-emerald-600'}">${fallbackCount}</span>
+            </div>
+          </div>
+          <div class="p-5 bg-surface-subtle/50 rounded-xl border border-border-light">
+            <div class="flex justify-between items-end">
+              <span class="text-sm font-semibold text-text-subtle flex items-center gap-2">
+                <span class="material-symbols-outlined text-[18px]">token</span> Tokens
+              </span>
+              <span class="text-lg font-bold font-mono text-text-main">${totalTokens.toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Jobs Table -->
+        <div class="mb-8">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-text-subtle mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined text-[16px]">work</span> Jobs
+          </h4>
+          <div class="bg-white rounded-xl border border-border-light overflow-hidden">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-50 border-b border-border-light">
+                <tr>
+                  <th class="py-2 px-4 text-left text-[11px] font-bold text-text-subtle uppercase">Job ID</th>
+                  <th class="py-2 px-4 text-left text-[11px] font-bold text-text-subtle uppercase">Role</th>
+                  <th class="py-2 px-4 text-left text-[11px] font-bold text-text-subtle uppercase">Status</th>
+                  <th class="py-2 px-4 text-left text-[11px] font-bold text-text-subtle uppercase">Duration</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-border-light">${jobsHtml}</tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Telemetry Table -->
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-wider text-text-subtle mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined text-[16px]">analytics</span> Model Telemetry
+          </h4>
+          <div class="bg-white rounded-xl border border-border-light overflow-hidden">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-50 border-b border-border-light">
+                <tr>
+                  <th class="py-2 px-3 text-left text-[10px] font-bold text-text-subtle uppercase">Time</th>
+                  <th class="py-2 px-3 text-left text-[10px] font-bold text-text-subtle uppercase">Step/Job</th>
+                  <th class="py-2 px-3 text-left text-[10px] font-bold text-text-subtle uppercase">Role</th>
+                  <th class="py-2 px-3 text-left text-[10px] font-bold text-text-subtle uppercase">Model</th>
+                  <th class="py-2 px-3 text-left text-[10px] font-bold text-text-subtle uppercase">Attempts</th>
+                  <th class="py-2 px-3 text-left text-[10px] font-bold text-text-subtle uppercase">Fallback</th>
+                  <th class="py-2 px-3 text-left text-[10px] font-bold text-text-subtle uppercase">Tokens</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-border-light">${telemetryHtml}</tbody>
+            </table>
+          </div>
+        <!-- Artifacts Section -->
+        <div class="mb-8">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-text-subtle mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined text-[16px]">inventory</span> Artifacts
+          </h4>
+          <div class="bg-white rounded-xl border border-border-light p-4 space-y-3">
+            ${renderArtifacts(run.agents?.artifacts)}
+          </div>
+        </div>
+
+        <!-- Rollback & History Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h4 class="text-xs font-bold uppercase tracking-wider text-text-subtle mb-4 flex items-center gap-2">
+              <span class="material-symbols-outlined text-[16px]">restore</span> Rollback Status
+            </h4>
+            <div class="bg-white rounded-xl border border-border-light p-4 text-sm">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="font-medium">Available:</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${data.rollbackAvailable ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}">${data.rollbackAvailable ? 'YES' : 'NO'}</span>
+              </div>
+              <div class="flex items-center gap-2 mb-2">
+                <span class="font-medium">Cooldown:</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${data.rollbackInCooldown ? 'bg-orange-50 text-orange-600' : 'bg-slate-100 text-slate-600'}">${data.rollbackInCooldown ? 'ACTIVE (' + data.lastRollbackAgeSec + 's ago)' : 'READY'}</span>
+              </div>
+              ${run.rollback ? `<details class="mt-3"><summary class="cursor-pointer text-text-subtle text-xs font-medium">Last rollback details</summary><pre class="mt-2 bg-slate-50 p-2 rounded text-[10px] overflow-auto max-h-24">${escapeHtml(JSON.stringify(run.rollback, null, 2))}</pre></details>` : ''}
+            </div>
+          </div>
+          <div>
+            <h4 class="text-xs font-bold uppercase tracking-wider text-text-subtle mb-4 flex items-center gap-2">
+              <span class="material-symbols-outlined text-[16px]">history</span> History
+            </h4>
+            <div class="bg-white rounded-xl border border-border-light p-4 text-sm max-h-40 overflow-auto">
+              ${(run.history || []).length ? run.history.map(h => `<div class="text-xs mb-1"><span class="text-text-subtle">${new Date(h.ts).toLocaleTimeString()}</span> <span class="font-mono">${escapeHtml(h.from)} → ${escapeHtml(h.to)}</span>${h.note ? ` <span class="text-text-subtle">— ${escapeHtml(h.note)}</span>` : ''}</div>`).join('') : '<span class="text-text-subtle text-xs">No history</span>'}
+            </div>
+          </div>
+        </div>
+
+      </div>
+    `;
+  }
+
+  function renderArtifacts(artifacts) {
+    if (!artifacts) return '<span class="text-text-subtle text-xs">No artifacts</span>';
+    const cands = Array.isArray(artifacts.candidates) ? artifacts.candidates.length : 0;
+    return `
+      <div class="text-xs"><span class="font-medium">chosenCandidateId:</span> <code class="bg-slate-100 px-1 rounded">${escapeHtml(artifacts.chosenCandidateId || '-')}</code></div>
+      <div class="text-xs"><span class="font-medium">candidates:</span> <code class="bg-slate-100 px-1 rounded">${cands}</code></div>
+      <details class="mt-2"><summary class="cursor-pointer text-text-subtle text-xs font-medium">multiPlan</summary><pre class="mt-1 bg-slate-50 p-2 rounded text-[10px] overflow-auto max-h-20">${escapeHtml(JSON.stringify(artifacts.multiPlan || null, null, 2))}</pre></details>
+      <details><summary class="cursor-pointer text-text-subtle text-xs font-medium">patchCandidate</summary><pre class="mt-1 bg-slate-50 p-2 rounded text-[10px] overflow-auto max-h-20">${escapeHtml(JSON.stringify(artifacts.patchCandidate || null, null, 2))}</pre></details>
+      <details><summary class="cursor-pointer text-text-subtle text-xs font-medium">candidates[]</summary><pre class="mt-1 bg-slate-50 p-2 rounded text-[10px] overflow-auto max-h-20">${escapeHtml(JSON.stringify(artifacts.candidates || [], null, 2))}</pre></details>
+      <details><summary class="cursor-pointer text-text-subtle text-xs font-medium">review</summary><pre class="mt-1 bg-slate-50 p-2 rounded text-[10px] overflow-auto max-h-20">${escapeHtml(JSON.stringify(artifacts.review || null, null, 2))}</pre></details>
+      <details><summary class="cursor-pointer text-text-subtle text-xs font-medium">security</summary><pre class="mt-1 bg-slate-50 p-2 rounded text-[10px] overflow-auto max-h-20">${escapeHtml(JSON.stringify(artifacts.security || null, null, 2))}</pre></details>
+    `;
+  }
+
+  async function replayDryRun(runId) {
+    if (!confirm("Run a dry-run replay for this run?")) return;
+    try {
+      const res = await fetch("/api/runs/" + encodeURIComponent(runId) + "/replay-dry-run", { method: "POST" });
+      const data = await res.json();
+      alert("Replay dry-run completed!\n" + JSON.stringify(data.summary || data, null, 2));
+    } catch (e) {
+      alert("Replay failed: " + e.message);
+    }
+  }
+
+  async function exportRun(runId) {
+    window.open("/api/runs/" + encodeURIComponent(runId) + "/export", "_blank");
+  }
+
+  async function rollbackRun(runId) {
+    if (!confirm("Are you sure you want to rollback this run?")) return;
+    try {
+      const res = await fetch("/api/runs/" + encodeURIComponent(runId) + "/rollback", { method: "POST" });
+      const data = await res.json();
+      if (data.ok) {
+        alert("Rollback successful!");
+        loadRunDetails(runId);
+      } else {
+        alert("Rollback failed: " + (data.message || data.error));
+      }
+    } catch (e) {
+      alert("Rollback error: " + e.message);
+    }
+  }
+
+  // Load modes
+  async function loadModes() {
+    try {
+      const res = await fetch("/api/catalog");
+      const data = await res.json();
+      modes = { modes: data.catalog?.modes || [] };
+      renderModes();
+    } catch (e) {
+      document.getElementById("modesBody").innerHTML = '<tr><td colspan="4" class="py-4 px-6 text-red-500">Error loading modes</td></tr>';
+    }
+  }
+
+  function statusBadge(status) {
+    const colors = { OK: 'bg-emerald-50 text-emerald-700', INVALID: 'bg-red-50 text-red-600', CYCLE: 'bg-red-50 text-red-600', SCHEMA_MISMATCH: 'bg-orange-50 text-orange-600' };
+    const cls = colors[status] || 'bg-slate-100 text-slate-600';
+    return '<span class="px-2 py-0.5 rounded text-[10px] font-bold ' + cls + '">' + (status || 'UNKNOWN') + '</span>';
+  }
+
+  function renderModes() {
+    const search = (document.getElementById("modesSearch").value || "").toLowerCase();
+    const filtered = (modes.modes || modes || []).filter(m =>
+      !search || m.id?.toLowerCase().includes(search) || m.name?.toLowerCase().includes(search) || (m.tags || []).some(t => t.toLowerCase().includes(search))
+    );
+    document.getElementById("modesBody").innerHTML = filtered.slice(0, 20).map(m => {
+      const srcBadge = m.source ? '<span class="bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded text-[9px] font-medium ml-1">' + m.source + '</span>' : '';
+      const packBadge = m.pack ? '<span class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[9px] font-medium ml-1">' + escapeHtml(m.pack.id) + '</span>' : '';
+      return `<tr class="hover:bg-slate-50 transition-colors">
+        <td class="px-6 py-3.5 font-bold text-text-main font-mono text-xs">${escapeHtml(m.id || '-')}</td>
+        <td class="px-6 py-3.5 text-text-subtle">${escapeHtml(m.name || '-')}</td>
+        <td class="px-6 py-3.5 font-mono text-text-subtle">${m.nodeCount ?? m.flow?.nodes?.length ?? 0}</td>
+        <td class="px-6 py-3.5">${statusBadge(m.status)}${srcBadge}${packBadge}</td>
+        <td class="px-6 py-3.5">
+          <button onclick="viewMode('${escapeHtml(m.id)}')" class="text-xs font-semibold text-primary hover:text-primary-hover mr-2">View</button>
+          <button onclick="simulateMode('${escapeHtml(m.id)}')" class="text-xs font-semibold text-blue-600 hover:text-blue-700">Simulate</button>
+        </td>
+      </tr>`;
+    }).join("") || '<tr><td colspan="5" class="py-4 px-6 text-text-subtle text-center">No modes found</td></tr>';
+  }
+
+  function filterModes() {
+    renderModes();
+  }
+
+  // View mode details
+  async function viewMode(id) {
+    try {
+      const res = await fetch("/api/modes/" + encodeURIComponent(id));
+      const detail = await res.json();
+      let html = `<div class="p-6 bg-white rounded-xl border border-border-light">
+        <h3 class="text-lg font-bold text-text-main mb-2">Mode: ${escapeHtml(detail.id)}</h3>
+        <p class="text-sm text-text-subtle mb-1"><span class="font-medium">Name:</span> ${escapeHtml(detail.name || '-')}</p>
+        <p class="text-sm text-text-subtle mb-3"><span class="font-medium">Status:</span> ${statusBadge(detail.status)}
+          ${detail.source ? '<span class="bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded text-[9px] font-medium ml-1">' + detail.source + '</span>' : ''}
+          ${detail.pack ? '<span class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[9px] font-medium ml-1">' + escapeHtml(detail.pack.id) + '</span>' : ''}
+        </p>`;
+      if (detail.errors && detail.errors.length > 0) {
+        html += '<div class="mb-3 p-3 bg-red-50 rounded-lg border border-red-100"><h4 class="text-xs font-bold text-red-600 mb-2">Errors:</h4><ul class="text-xs text-red-600 list-disc pl-4">';
+        detail.errors.forEach(e => { html += '<li>' + escapeHtml(e.type) + ': ' + escapeHtml(e.message) + '</li>'; });
+        html += '</ul></div>';
+      }
+      if (detail.nodes && detail.nodes.length > 0) {
+        html += '<h4 class="text-xs font-bold text-text-subtle uppercase tracking-wider mb-2">Nodes:</h4><table class="w-full text-xs mb-3"><thead class="bg-slate-50"><tr><th class="px-2 py-1 text-left">ID</th><th class="px-2 py-1 text-left">Role</th><th class="px-2 py-1 text-left">Schema</th></tr></thead><tbody>';
+        detail.nodes.forEach(n => {
+          html += '<tr class="border-b border-slate-100"><td class="px-2 py-1 font-mono">' + escapeHtml(n.id) + '</td><td class="px-2 py-1">' + escapeHtml(n.role) + '</td><td class="px-2 py-1 font-mono">' + escapeHtml(n.expectedSchema) + '</td></tr>';
+        });
+        html += '</tbody></table>';
+      }
+      if (detail.topo && detail.topo.length > 0) {
+        html += '<h4 class="text-xs font-bold text-text-subtle uppercase tracking-wider mb-2">Execution Order (topo):</h4><ol class="text-xs list-decimal pl-4 mb-3">';
+        detail.topo.forEach((tick, i) => {
+          const parallel = tick.length > 1 ? ' <span class="text-emerald-600 font-medium">(parallel)</span>' : '';
+          html += '<li>Tick ' + (i+1) + ': <code class="bg-slate-100 px-1 rounded">' + tick.join(", ") + '</code>' + parallel + '</li>';
+        });
+        html += '</ol>';
+      }
+      html += '</div>';
+      alert("Mode Details:\n\n" + detail.id + "\nName: " + (detail.name || '-') + "\nStatus: " + (detail.status || 'UNKNOWN') + "\nNodes: " + (detail.nodes?.length || 0) + "\nTopo ticks: " + (detail.topo?.length || 0));
+    } catch (e) {
+      alert("Failed to load mode: " + e.message);
+    }
+  }
+
+  // Simulate mode
+  async function simulateMode(id) {
+    try {
+      const res = await fetch("/api/modes/" + encodeURIComponent(id) + "/simulate", { method: "POST" });
+      const sim = await res.json();
+      if (!sim.ok) {
+        alert("Simulate Error: " + (sim.error || 'Unknown error'));
+        return;
+      }
+      let msg = "Simulate: " + id + "\n\nExecution Ticks:\n";
+      sim.ticks.forEach((tick, i) => {
+        const parallel = tick.length > 1 ? ' (parallel: ' + tick.length + ' nodes)' : '';
+        msg += (i+1) + ". " + tick.join(", ") + parallel + "\n";
+      });
+      if (sim.parallel && sim.parallel.length > 0) {
+        msg += "\nParallel Groups: " + sim.parallel.length + " tick(s) with parallel execution";
+      }
+      if (Object.keys(sim.blockedBy || {}).length > 0) {
+        msg += "\n\nDependencies (blockedBy):\n";
+        Object.entries(sim.blockedBy).forEach(([node, deps]) => {
+          msg += "  " + node + " ← " + (deps.length ? deps.join(", ") : '(none)') + "\n";
+        });
+      }
+      alert(msg);
+    } catch (e) {
+      alert("Simulate failed: " + e.message);
+    }
+  }
+
+  // Load packs
+  async function loadPacks() {
+    try {
+      const res = await fetch("/api/packs");
+      packs = await res.json();
+      renderPacks();
+    } catch (e) {
+      document.getElementById("packsList").innerHTML = '<div class="text-red-500 text-sm p-4 bg-white rounded-2xl shadow-card border border-red-200">Error loading packs</div>';
+    }
+  }
+
+  function renderPacks() {
+    const container = document.getElementById("packsList");
+    if (!packs.length) {
+      container.innerHTML = '<div class="text-text-subtle text-sm p-4 bg-white rounded-2xl shadow-card border border-border-light">No packs installed</div>';
+      return;
+    }
+    container.innerHTML = packs.map(p => `
+      <div class="bg-white rounded-2xl p-5 border border-transparent shadow-card hover:shadow-md transition-all flex items-center justify-between group hover:-translate-y-0.5">
+        <div class="flex items-center gap-4">
+          <div class="size-11 rounded-xl bg-gradient-to-br from-primary to-emerald-700 flex items-center justify-center text-white shadow-sm">
+            <span class="material-symbols-outlined text-[24px]">inventory_2</span>
+          </div>
+          <div>
+            <h4 class="font-bold text-base text-text-main">${escapeHtml(p.name || p.id || p.file)}</h4>
+            <p class="text-xs text-text-subtle font-medium">v${escapeHtml(p.version || '0.0.0')}</p>
+          </div>
+        </div>
+        <span class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase ${p.enabled !== false ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}">${p.enabled !== false ? 'Active' : 'Disabled'}</span>
+      </div>
+    `).join("");
+  }
+
+  function escapeHtml(s) {
+    return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    sidebar.classList.toggle('-translate-x-full');
+    overlay.classList.toggle('hidden');
+  }
+
+  // Init
+  connect();
+  loadRuns();
+  loadModes();
+  loadPacks();
+</script>
+
+  </main>
+</div>
+
+</body>
+</html>

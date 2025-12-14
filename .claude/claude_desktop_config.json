@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "num-agents": {
+      "command": "node",
+      "args": [
+        "dist/src/cli.js",
+        "serve",
+        "--modes-path",
+        "./examples/num-agents/num-core/modes",
+        "--dashboard",
+        "--dashboard-port",
+        "3002"
+      ],
+      "env": {
+        "LOG_LEVEL": "info"
+      }
+    }
+  }
+}

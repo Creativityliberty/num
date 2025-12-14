@@ -1,0 +1,28 @@
+{
+  "id": "security-scan",
+  "name": "Num Security Scan",
+  "description": "Scan code for security vulnerabilities",
+  "tags": ["security", "audit", "vulnerability"],
+  "runtimePolicy": {
+    "model": {
+      "preferred": { "provider": "openai", "model": "gpt-4.1" }
+    },
+    "budget": { "maxCostUsd": 3 }
+  },
+  "flow": {
+    "version": "1",
+    "nodes": [
+      {
+        "id": "scan",
+        "role": "security",
+        "goal": "Scan code for security vulnerabilities",
+        "expectedSchema": "securityReport",
+        "prompt": {
+          "system": "You are a security expert. Analyze code for OWASP Top 10, injection vulnerabilities, authentication issues, and data exposure risks.",
+          "user": "Scan this code for security issues:\n{{task.goal}}\n\nContext:\n{{task.context | json}}"
+        }
+      }
+    ],
+    "edges": []
+  }
+}

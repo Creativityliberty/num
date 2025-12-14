@@ -1,0 +1,40 @@
+{
+  "id": "docs-writer",
+  "name": "Num Docs Writer",
+  "description": "Generate documentation for code",
+  "tags": ["docs", "documentation", "readme"],
+  "runtimePolicy": {
+    "model": {
+      "preferred": { "provider": "openai", "model": "gpt-4.1-mini" }
+    },
+    "budget": { "maxCostUsd": 2 }
+  },
+  "flow": {
+    "version": "1",
+    "nodes": [
+      {
+        "id": "plan",
+        "role": "planner",
+        "goal": "Analyze code structure and plan documentation",
+        "expectedSchema": "multiPlan",
+        "prompt": {
+          "system": "You are a technical writer. Analyze the codebase and plan comprehensive documentation.",
+          "user": "Create documentation plan for:\n{{task.goal}}\n\nContext:\n{{task.context | json}}"
+        }
+      },
+      {
+        "id": "implement",
+        "role": "implementer",
+        "goal": "Write the documentation",
+        "expectedSchema": "patchCandidate",
+        "prompt": {
+          "system": "You are a technical writer. Write clear, concise documentation with examples.",
+          "user": "Write documentation based on plan:\n{{artifacts.plan | json}}"
+        }
+      }
+    ],
+    "edges": [
+      { "from": "plan", "to": "implement" }
+    ]
+  }
+}

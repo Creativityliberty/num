@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Playground — MCP Agent Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#059669",
+            "primary-hover": "#047857",
+            "accent": "#34D399",
+            "background-light": "#F8FAFC",
+            "surface-light": "#FFFFFF",
+            "surface-subtle": "#F1F5F9",
+            "border-light": "#E2E8F0",
+            "text-main": "#0F172A",
+            "text-subtle": "#64748B",
+          },
+          fontFamily: {
+            "display": ["Inter", "sans-serif"],
+            "mono": ["JetBrains Mono", "monospace"],
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; vertical-align: text-bottom; }
+  </style>
+</head>
+<body class="bg-background-light text-text-main font-display antialiased min-h-screen flex flex-col">
+
+<!-- Header -->
+<header class="sticky top-0 z-50 w-full bg-surface-light/80 backdrop-blur-xl border-b border-border-light shadow-sm">
+  <div class="px-6 py-3.5 flex items-center justify-between w-full">
+    <div class="flex items-center gap-4">
+      <button onclick="toggleSidebar()" class="p-2 hover:bg-surface-subtle rounded-lg transition-all lg:hidden">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+      <div class="size-9 rounded-xl bg-gradient-to-br from-primary to-emerald-700 flex items-center justify-center text-white shadow-lg shadow-primary/25">
+        <span class="material-symbols-outlined text-[20px]">hub</span>
+      </div>
+      <div>
+        <h1 class="text-lg font-bold tracking-tight text-text-main leading-tight">Playground</h1>
+        <p class="text-[11px] font-medium text-text-subtle hidden sm:block">Test agents with simulate and smoke</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Sidebar + Main -->
+<div class="flex flex-1 overflow-hidden">
+  <!-- Sidebar -->
+  <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 w-64 bg-surface-light border-r border-border-light overflow-y-auto z-40 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+    <nav class="p-4 space-y-2">
+      <a href="/" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-text-subtle hover:text-text-main hover:bg-surface-subtle rounded-lg transition-all">
+        <span class="material-symbols-outlined text-[20px]">dashboard</span>
+        Dashboard
+      </a>
+      <a href="/catalog" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-text-subtle hover:text-text-main hover:bg-surface-subtle rounded-lg transition-all">
+        <span class="material-symbols-outlined text-[20px]">list</span>
+        Catalog
+      </a>
+      <a href="/packs" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-text-subtle hover:text-text-main hover:bg-surface-subtle rounded-lg transition-all">
+        <span class="material-symbols-outlined text-[20px]">inventory_2</span>
+        Packs
+      </a>
+      <a href="/agent-detail" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-text-subtle hover:text-text-main hover:bg-surface-subtle rounded-lg transition-all">
+        <span class="material-symbols-outlined text-[20px]">info</span>
+        Agent Detail
+      </a>
+      <a href="/editor" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-text-subtle hover:text-text-main hover:bg-surface-subtle rounded-lg transition-all">
+        <span class="material-symbols-outlined text-[20px]">edit</span>
+        Editor
+      </a>
+      <a href="/playground" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-primary bg-primary/5 rounded-lg transition-all">
+        <span class="material-symbols-outlined text-[20px]">play_arrow</span>
+        Playground
+      </a>
+      <a href="/scoring" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-text-subtle hover:text-text-main hover:bg-surface-subtle rounded-lg transition-all">
+        <span class="material-symbols-outlined text-[20px]">grade</span>
+        Scoring
+      </a>
+      <a href="/model-health" class="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-text-subtle hover:text-text-main hover:bg-surface-subtle rounded-lg transition-all">
+        <span class="material-symbols-outlined text-[20px]">monitor_heart</span>
+        Model Health
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Overlay for mobile -->
+  <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-30 hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+  <!-- Main Content -->
+  <main class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 space-y-6">
+
+    <!-- Test Controls -->
+    <div class="bg-surface-light rounded-xl border border-border-light p-6 shadow-sm">
+      <h3 class="text-lg font-bold text-text-main mb-4">Test Agent</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-text-main mb-2">Mode ID</label>
+          <input id="modeId" type="text" placeholder="num:..." class="w-full px-4 py-2 border border-border-light rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-text-main mb-2">Goal (optional)</label>
+          <input id="goal" type="text" placeholder="Fix failing test..." class="w-full px-4 py-2 border border-border-light rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"/>
+        </div>
+      </div>
+      <div class="flex gap-2 mt-4">
+        <button onclick="simulateAgent()" class="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-all flex items-center gap-2">
+          <span class="material-symbols-outlined text-[18px]">play_arrow</span>
+          Simulate
+        </button>
+        <button onclick="smokeAgent()" class="px-4 py-2 bg-yellow-600 text-white text-sm font-semibold rounded-lg hover:bg-yellow-700 transition-all flex items-center gap-2">
+          <span class="material-symbols-outlined text-[18px]">science</span>
+          Smoke (dry-run)
+        </button>
+      </div>
+    </div>
+
+    <!-- Output -->
+    <div class="bg-surface-light rounded-xl border border-border-light p-6 shadow-sm">
+      <h3 class="text-lg font-bold text-text-main mb-4">Output</h3>
+      <pre id="output" class="bg-surface-subtle rounded-lg p-4 text-sm font-mono text-text-subtle overflow-auto max-h-96">{}</pre>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    sidebar.classList.toggle('-translate-x-full');
+    overlay.classList.toggle('hidden');
+  }
+
+  const u = new URLSearchParams(window.location.search);
+  const initialModeId = u.get('modeId') || '';
+  if (initialModeId) document.getElementById('modeId').value = initialModeId;
+
+  async function post(url, body) {
+    const r = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+    return await r.json();
+  }
+
+  function setOutput(obj) {
+    document.getElementById('output').textContent = JSON.stringify(obj, null, 2);
+  }
+
+  async function simulateAgent() {
+    const modeId = document.getElementById('modeId').value.trim();
+    if (!modeId) return setOutput({ error: 'modeId required' });
+    const res = await post('/api/playground/simulate', { modeId });
+    setOutput(res);
+  }
+
+  async function smokeAgent() {
+    const modeId = document.getElementById('modeId').value.trim();
+    const goal = document.getElementById('goal').value.trim();
+    if (!modeId) return setOutput({ error: 'modeId required' });
+    const res = await post('/api/playground/smoke-single', { modeId, goal, packId: 'num-pack' });
+    setOutput(res);
+  }
+</script>
+
+</body>
+</html>
